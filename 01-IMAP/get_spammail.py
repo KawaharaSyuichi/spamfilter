@@ -22,7 +22,7 @@ def make_yesterday_str():
     today = str(date.day) + '-' + \
         month_dict[date.month][0] + '-' + str(date.year)
 
-    if (date.today - 1) == 0:  # 月初
+    if (date.day - 1) == 0:  # 月初
         if (date.month == 3 and isLeapYear(data.year)):  # 前日が2月かつ閏年の場合
             yesterday = str(month_dict[2][2]) + '-' + \
                 month_dict[date.month - 1][0] + '-' + str(date.year)
@@ -148,8 +148,6 @@ for i, num in enumerate(datas[0].split()):
         continue
 
     write_mailtext(msg, yesterday, skip_mail_num)
-
-    print(i+1)
 
 with open(something_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
     spam.write("Total spam mail num:" +
