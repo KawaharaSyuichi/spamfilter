@@ -41,7 +41,7 @@ def make_yesterday_str():
 
     else:
         yesterday = str(date.day - 1) + '-' + \
-            month_dict[date.month] + '-' + str(date.year)
+            month_dict[date.month][0] + '-' + str(date.year)
 
     search_option = 'SINCE ' + yesterday + ' BEFORE ' + today
 
@@ -151,7 +151,7 @@ for i, num in enumerate(datas[0].split()):
 
 with open(something_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
     spam.write("Total spam mail num:" +
-               str(len(datas[0].split())-skip_mail_num))
+               str(len(datas[0].split())-skip_mail_num)+"\n")
 
 docomo.close()
 docomo.logout()
