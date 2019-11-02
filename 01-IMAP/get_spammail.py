@@ -1,12 +1,12 @@
 import imaplib
 import email
 import datetime
-import something_info  # メールサーバのパスワード等の情報を記載したファイル
+import spam_info  # メールサーバのパスワード等の情報を記載したファイル
 
 from email.header import make_header, decode_header
 
-docomo = imaplib.IMAP4_SSL(something_info.SERVER_NAME, 993)
-docomo.login(something_info.USER_ID, something_info.PASSWORD)
+docomo = imaplib.IMAP4_SSL(spam_info.SERVER_NAME, 993)
+docomo.login(spam_info.USER_ID, spam_info.PASSWORD)
 docomo.select('inbox')
 
 month_dict = {1: ["Jan", 31], 2: ["Feb", 28, 29], 3: ["Mar", 31], 4: ["Apr", 30], 5: ["May", 31], 6: ["Jun", 30],
@@ -56,12 +56,12 @@ def write_mailtext(msg, yesterday, skip_mail_num):
         skip_mail_num += 1
         return
 
-    if from_addr in something_info.notspam_address_list:  # スパムではないアドレスの確認
+    if from_addr in spam_info.notspam_address_list:  # スパムではないアドレスの確認
         # スパムでないアドレスが確認できた場合の処理
         skip_mail_num += 1
         return
 
-    with open(something_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
+    with open(spam_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
         for mail_header in msg.keys():
             try:
                 header_document = str(make_header(
@@ -88,10 +88,10 @@ def write_mailtext(msg, yesterday, skip_mail_num):
             payload = payload.replace('\r\n', '')
             payload = payload.replace('\n', '')
             payload = payload.replace('\r', '')
-            with open(something_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
+            with open(spam_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
                 spam.write("body:" + payload + '\n' * 2)
         except:
-            with open(something_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
+            with open(spam_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
                 spam.write("body:" + "Decode_Error" + '\n' * 2)
 
     else:
@@ -114,21 +114,21 @@ def write_mailtext(msg, yesterday, skip_mail_num):
                 payload = payload.replace('\r', '')
                 if skip_flag == False:
                     skip_flag = True
-                    with open(something_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
+                    with open(spam_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
                         spam.write("body:" + payload)
                 else:
-                    with open(something_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
+                    with open(spam_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
                         spam.write(payload)
             except:
                 if skip_flag == False:
                     skip_flag = True
-                    with open(something_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
+                    with open(spam_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
                         spam.write("body:" + "Decode_Error")
                 else:
-                    with open(something_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
+                    with open(spam_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
                         spam.write("Decode_Error")
 
-        with open(something_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
+        with open(spam_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
             spam.write("\n"*2)
 
 
@@ -149,7 +149,7 @@ for i, num in enumerate(datas[0].split()):
 
     write_mailtext(msg, yesterday, skip_mail_num)
 
-with open(something_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
+with open(spam_info.spam_path + "spam_" + yesterday + ".txt", "a") as spam:
     spam.write("Total spam mail num:" +
                str(len(datas[0].split())-skip_mail_num)+"\n")
 
