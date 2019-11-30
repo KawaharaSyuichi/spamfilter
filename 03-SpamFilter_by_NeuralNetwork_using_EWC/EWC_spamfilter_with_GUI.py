@@ -45,9 +45,15 @@ class Doc2vecTrainAndTest:
     def add_learning_doc2vec_list(self, doc2vec_vector):
         self.learning_doc2vec_list.append(doc2vec_vector)
 
-    def random_batch(self, doc2vec_vector):
+    def random_batch(self, doc2vec_vector, mail_class):
         batch_vector = doc2vec_vector[:self.batch_size]
-        return batch_vector
+
+        if mail_class == "spam":
+            batch_vector_class = [1 for _ in range(self.batch_size)]
+        else:
+            batch_vector_class = [0 for _ in range(self.batch_size)]
+
+        return batch_vector, batch_vector_class
 
     def plot_test_acc(self, plot_handles):
         plt.legend(handles=plot_handles, loc="lower right")
@@ -70,17 +76,21 @@ class Doc2vecTrainAndTest:
             else:
                 self.neural_network_model.update_ewc_loss(self.lams[l])
 
-            test_accs = []
+            spam_test_accs = []
+            ham_test_accs = []
             for _ in range(len(self.learning_doc2vec_list)):
-                test_accs.append(np.zeros(int(self.num_iter / self.disp_freq)))
+                spam_test_accs.append(
+                    np.zeros(int(self.num_iter / self.disp_freq)))
+                ham_test_accs.append(
+                    np.zeros(int(self.num_iter / self.disp_freq)))
 
             for iter in range(self.num_iter):
 
                 if len(self.lams) == 2:
                     spam_train_batch = self.random_batch(
-                        self.learning_doc2vec_list[-1])
+                        self.learning_doc2vec_list[-1], "spam")
                     ham_train_batch = self.random_batch(
-                        self.learning_doc2vec_list[-1])
+                        self.learning_doc2vec_list[-2], "ham")
 
                     train_vector_batch = spam_train_batch[0] + \
                         ham_train_batch[0]
@@ -94,39 +104,42 @@ class Doc2vecTrainAndTest:
                     plt.subplot(1, len(self.lams), l + 1)
 
                     plots = []
-                    colors = ['r', 'b', 'c']
+                    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
 
                     for task in range(self.learning_doc2vec_list):
-                        spam_test_batch = self.random_batch(
-                            self.learning_doc2vec_list[-1])
-                        ham_test_batch = self.random_batch(
-                            self.learning_doc2vec_list[-1])
+                        spam_test_vector_batch, spam_test_mail_class_batch = self.random_batch(
+                            self.learning_doc2vec_list[-1], "spam")
+                        ham_test_vector_batch, ham_test_mail_class_batch = self.random_batch(
+                            self.learning_doc2vec_list[-2], "ham")
 
-                        test_vector_batch = spam_test_batch[0] + \
-                            ham_test_batch[0]
-                        test_mail_class_batch = spam_test_batch[1] + \
-                            ham_test_batch[1]
+                        feed_spam_dict = {self.mail_class: np.array(
+                            spam_test_vector_batch), self.mail_class: np.array(spam_test_mail_class_batch)}
+                        feed_ham_dict = {self.mail_class: np.array(
+                            ham_test_vector_batch), self.mail_class: np.array(ham_test_mail_class_batch)}
 
-                        feed_dict = {self.mail_class: np.array(
-                            test_vector_batch), self.mail_class: np.array(test_mail_class_batch)}
-
-                        test_accs[task][int(
-                            iter / self.disp_freq)] = self.neural_network_model.accuracy.eval(feed_dict=feed_dict)
+                        spam_test_accs[task][int(
+                            iter / self.disp_freq)] = self.neural_network_model.accuracy.eval(feed_dict=feed_spam_dict)
+                        ham_test_accs[task][int(
+                            iter / self.disp_freq)] = self.neural_network_model.accuracy.eval(feed_dict=feed_ham_dict)
 
                         if task % 2 == 0:
                             c = "まだ考え中"
 
+                        spam_plot, = plt.plot(range(
+                            1, iter + 2, self.disp_freq), spam_test_accs[task][:int(iter / self.disp_freq) + 1], colors[task], label=c)
+
+                        ham_plot, = plt.plot(range(
+                            1, iter + 2, self.disp_freq), ham_test_accs[task][:int(iter / self.disp_freq) + 1], colors[task], label=c)
+
+                        plots.append(spam_plot)
+                        plots.append(ham_plot)
+
                         if l == 0:
                             print("SGD" + " " + c + ":" +
-                                  str(test_accs[task][int(iter / self.disp_freq)]))
+                                  str(spam_test_accs[task][int(iter / self.disp_freq)]))
                         else:
                             print("EWC" + " " + c + ":" +
-                                  str(test_accs[task][int(iter / self.disp_freq)]))
-
-                        plot_h, = plt.plot(range(
-                            1, iter + 2, self.disp_freq), test_accs[task][:int(iter / self.disp_freq) + 1], colors[task], label=c)
-
-                        plots.append(plot_h)
+                                  str(spam_test_accs[task][int(iter / self.disp_freq)]))
 
                     self.plot_test_acc(plots)
 
@@ -189,3 +202,5 @@ for i, doc2vec_info in enumerate(doc2vec_info_list):
         doc2vec_info_list[i*2])  # spamを追加
     doc2vec_train_and_test.add_learning_doc2vec_list(
         doc2vec_info_list[i*2+1])  # hamを追加
+
+    doc2vec_train_and_test.train_task()
