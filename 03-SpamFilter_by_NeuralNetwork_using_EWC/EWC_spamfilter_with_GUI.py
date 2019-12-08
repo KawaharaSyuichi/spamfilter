@@ -1,7 +1,7 @@
-import gensim
 import random
 import sys
 import doc2vec_model_select  # 自作のライブラリ
+import time
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,196 +11,71 @@ from model_for_doc2vec import Model  # 自作のライブラリ
 from gensim.models import Doc2Vec
 
 
+def cal_time(func):  # 実行時間の計測
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        func(*args, **kwargs)
+        end = time.time()
+        print("Execution time{:.3f}".format(end - start), "s")
+    return wrapper
+
+
 class Doc2vecInformation:
     def __init__(self):
-        self.doc2vec_model_file_name = str()
-        self.doc2vec_model_type = str()
-        self.doc2vec_border = 0
-        self.spam_doc2vec = list()
-        self.ham_doc2vec = list()
+        self.file_path = str()
+        self.mail_type = str()
+        self.spam_vector = list()
+        self.ham_vector = list()
+        self.border = 0
 
-    def separata_spam_and_ham(self, doc2vec_model):
-        doc2vec_vector = [doc2vec_model.docvecs[num]
-                          for num in range(len(doc2vec_model.docvecs))]
-        self.spam_doc2vec = doc2vec_vector[:self.doc2vec_border]
-        self.ham_doc2vec = doc2vec_vector[self.doc2vec_border:]
+    def separata_spam_and_ham(self, model):
+        vector = [model.docvecs[i] for i in range(len(model.docvecs))]
+        self.spam_vector = vector[:self.border]
+        self.ham_vector = vector[self.border:]
 
+    def set_file_path(self, path):
+        self.file_path = path
 
-class Doc2vecTrainAndTest:
-    def __init__(self, neural_network_model, sess, doc2vec_info_list, mail_doc2vec, mail_class):
-        self.sess = sess
-        self.mail_doc2vec = mail_doc2vec
-        self.mail_class = mail_class
-        self.num_iter = 320
-        self.disp_freq = 20
-        self.batch_size = 80
-        self.lams = [0]
-        self.learning_doc2vec_list = list()
-        self.neural_network_model = neural_network_model
-        self.doc2vec_info_list = doc2vec_info_list
-
-    def add_lams_list(self, lam):
-        self.lams.append(lam)
-
-    def add_learning_doc2vec_list(self, doc2vec_vector):
-        self.learning_doc2vec_list.append(doc2vec_vector)
-
-    def random_batch(self, doc2vec_vector, mail_class):
-        batch_vector = doc2vec_vector[:self.batch_size]
-
-        if mail_class == "spam":
-            batch_vector_class = [1 for _ in range(self.batch_size)]
-        else:
-            batch_vector_class = [0 for _ in range(self.batch_size)]
-
-        return batch_vector, batch_vector_class
-
-    def plot_test_acc(self, plot_handles):
-        plt.legend(handles=plot_handles, loc="lower right")
-        plt.xlabel("Iterations")
-        plt.ylabel("Test Accuracy")
-        plt.yticks(np.arange(0.0, 1.1, 0.1))
-        plt.xticks(np.arange(0, 310, 50))
-        plt.ylim(0.0, 1.01)
-        plt.grid(which='major', color='black', linestyle='-')
-        display.display(plt.gcf())
-        display.clear_output(wait=True)
-
-    # spamとhamの識別率を別々に計算
-    def train_task(self):
-        for l in range(len(self.lams)):
-            self.neural_network_model.restore(self.sess)
-
-            if (self.lams[l] == 0):
-                self.neural_network_model.set_vanilla_loss()
-            else:
-                self.neural_network_model.update_ewc_loss(self.lams[l])
-
-            spam_test_accs = []
-            ham_test_accs = []
-            for _ in range(len(self.learning_doc2vec_list)):
-                spam_test_accs.append(
-                    np.zeros(int(self.num_iter / self.disp_freq)))
-                ham_test_accs.append(
-                    np.zeros(int(self.num_iter / self.disp_freq)))
-
-            for iter in range(self.num_iter):
-
-                if len(self.lams) == 2:
-                    spam_train_batch = self.random_batch(
-                        self.learning_doc2vec_list[-1], "spam")
-                    ham_train_batch = self.random_batch(
-                        self.learning_doc2vec_list[-2], "ham")
-
-                    train_vector_batch = spam_train_batch[0] + \
-                        ham_train_batch[0]
-                    train_mail_class_batch = spam_train_batch[1] + \
-                        ham_train_batch[1]
-
-                    self.neural_network_model.train_step.run(
-                        feed_dict={self.mail_doc2vec: np.array(train_vector_batch), self.mail_class: np.array(train_mail_class_batch)})
-
-                if iter % self.disp_freq == 0:
-                    plt.subplot(1, len(self.lams), l + 1)
-
-                    plots = []
-                    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
-
-                    for task in range(self.learning_doc2vec_list):
-                        spam_test_vector_batch, spam_test_mail_class_batch = self.random_batch(
-                            self.learning_doc2vec_list[-1], "spam")
-                        ham_test_vector_batch, ham_test_mail_class_batch = self.random_batch(
-                            self.learning_doc2vec_list[-2], "ham")
-
-                        feed_spam_dict = {self.mail_class: np.array(
-                            spam_test_vector_batch), self.mail_class: np.array(spam_test_mail_class_batch)}
-                        feed_ham_dict = {self.mail_class: np.array(
-                            ham_test_vector_batch), self.mail_class: np.array(ham_test_mail_class_batch)}
-
-                        spam_test_accs[task][int(
-                            iter / self.disp_freq)] = self.neural_network_model.accuracy.eval(feed_dict=feed_spam_dict)
-                        ham_test_accs[task][int(
-                            iter / self.disp_freq)] = self.neural_network_model.accuracy.eval(feed_dict=feed_ham_dict)
-
-                        if task % 2 == 0:
-                            c = "まだ考え中"
-
-                        spam_plot, = plt.plot(range(
-                            1, iter + 2, self.disp_freq), spam_test_accs[task][:int(iter / self.disp_freq) + 1], colors[task], label=c)
-
-                        ham_plot, = plt.plot(range(
-                            1, iter + 2, self.disp_freq), ham_test_accs[task][:int(iter / self.disp_freq) + 1], colors[task], label=c)
-
-                        plots.append(spam_plot)
-                        plots.append(ham_plot)
-
-                        if l == 0:
-                            print("SGD" + " " + c + ":" +
-                                  str(spam_test_accs[task][int(iter / self.disp_freq)]))
-                        else:
-                            print("EWC" + " " + c + ":" +
-                                  str(spam_test_accs[task][int(iter / self.disp_freq)]))
-
-                    self.plot_test_acc(plots)
-
-                    if l == 0:
-                        plt.title("Stochastic Gradient Descent")
-                    else:
-                        plt.title("Elastic Weight Consolidation")
-
-                    plt.gcf().set_size_inches(len(self.lams) * 5, 3.5)
-
-        plt.show()
+    def set_mail_type(self, mail_type):
+        self.mail_type = mail_type
 
 
-def initialization():
-    sess = tf.InteractiveSession()
-    mail_doc2vec = tf.placeholder(tf.float32, shape=[None, 300])
-    mail_class = tf.placeholder(
-        tf.float32, shape=[None, 2])  # ham:[1,0],spam:[0,1]
+class NeuralNetworkInformation:
+    def __init__(self, mail_doc2vec_vector_size):  # current mail_doc2vec_vector_size : 300
+        self.sess = tf.InteractiveSession()
+        self.mail_doc2vec = tf.placeholder(
+            tf.float32, shape=[None, mail_doc2vec_vector_size])
+        self.mail_class = tf.placeholder(
+            tf.float32, shape=[None, 2])  # ham:[1,0] spam:[0,1]
+        self.nn_model = Model(self.mail_doc2vec, self.mail_class)
 
-    neural_network_model = Model(mail_doc2vec, mail_class)
-
-    sess.run(tf.global_variables_initializer())
-
-    return neural_network_model, sess, mail_doc2vec, mail_class
+    def sess_run(self):
+        self.sess.run(tf.global_variables_initializer())
 
 
-# doc2vec[1000]:spam
-# doc2vec[1000:2000]:ham
+def read_doc2vec():
+    while True:
+        doc2vec_info = Doc2vecInformation()
+        doc2vec_info.set_file_path(doc2vec_model_select.read_doc2vec_model())
+
+        # 入力するdoc2vecがどの言語や，どの月のものかを入力
+        mail_type = input('Input mail type >>')
+        doc2vec_info.set_mail_type(mail_type)
+
+        # doc2vecのどこまでがspamで，どこからがhamメールかを入力
+        doc2vec_border = input('Input doc2vec border >>')
+        doc2vec_info.border = int(doc2vec_border)
+
+        doc2vec_info.separata_spam_and_ham(
+            Doc2Vec.load(doc2vec_info.file_path))
+
+        doc2vec_info_list.append(doc2vec_info)
+
+        # 読み込みを終わる場合はfを入力
+        finish_flag = input('Push f to finish >>')
+        if finish_flag == 'f' or finish_flag == 'F':
+            break
+
 
 doc2vec_info_list = []
-while True:
-    doc2vec_info = Doc2vecInformation()
-    doc2vec_info.doc2vec_model_file_name = doc2vec_model_select.read_doc2vec_model()
-
-    # 入力するdoc2vecがどの言語や，どの月のものかを入力
-    doc2vec_type = input('Input doc2vec type >>')
-    doc2vec_info.doc2vec_model_type = doc2vec_type
-
-    # doc2vecのどこまでがspamで，どこからがhamメールかを入力
-    doc2vec_border = input('Input doc2vec border >>')
-    doc2vec_info.doc2vec_border = int(doc2vec_border)
-
-    doc2vec_info.separata_spam_and_ham(
-        Doc2Vec.load(doc2vec_info.doc2vec_model_file_name))
-
-    doc2vec_info_list.append(doc2vec_info)
-
-    # 読み込みを終わる場合はfを入力
-    finish_flag = input('Push f to finish >>')
-    if finish_flag == 'f' or finish_flag == 'F':
-        break
-
-neural_network_model, sess, mail_doc2vec, mail_class = initialization()
-
-doc2vec_train_and_test = Doc2vecTrainAndTest(
-    neural_network_model, sess, doc2vec_info_list, mail_doc2vec, mail_class)
-
-for i, doc2vec_info in enumerate(doc2vec_info_list):
-    doc2vec_train_and_test.add_learning_doc2vec_list(
-        doc2vec_info_list[i*2])  # spamを追加
-    doc2vec_train_and_test.add_learning_doc2vec_list(
-        doc2vec_info_list[i*2+1])  # hamを追加
-
-    doc2vec_train_and_test.train_task()
+read_doc2vec()
