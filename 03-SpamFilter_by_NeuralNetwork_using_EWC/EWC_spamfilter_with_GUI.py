@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from IPython import display
-from model_for_doc2vec import Model  # 自作のライブラリ
+from model_for_doc2vec_with_GUI import Model  # 自作のライブラリ
 from gensim.models import Doc2Vec
 
 
@@ -24,11 +24,14 @@ class Train_and_Test:
     def __init__(self, doc2vec_info_list, nn_model_info):
         self.nn_model_info = nn_model_info
         self.doc2vec_info_list = doc2vec_info_list
-        self.lams = [0]
+        self.lams = [0, 40]
         self.num_iter = 320
-        self.batch_size = 40
+        self.batch_size = 40  # spamとhamで，合計80バッチ
         self.disp_freq = 20
-        self.test_accs = np.zeros(int(self.num_iter/self.disp_freq))
+        self.test_accs = np.zeros(int(self.num_iter / self.disp_freq))
+        self.iteration = 0
+        self.learned_doc2vec_list = list()
+        self.plots = list()
 
     def plot_test_acc(self, plot_handles):
         plt.legend(handles=plot_handles, loc="lower right")
@@ -41,74 +44,176 @@ class Train_and_Test:
         display.display(plt.gcf())
         display.clear_output(wait=True)
 
-    def set_test_accs(self):
-        self.test_accs = np.zeros(int(self.num_iter/self.disp_freq))
+    def set_test_accs(self, doc2vec_info_id):
+        self.test_accs = []
 
-    def random_batch(self, mail_vector):
+        for _ in range(doc2vec_info_id + 1):
+            self.test_accs.append(
+                np.zeros(int(self.num_iter / self.disp_freq)))
+
+    def iteration_up(self):
+        self.iteration += 1
+
+    def iteration_reset(self):
+        self.iteration = 0
+
+    def add_learned_doc2vec(self, doc2vec_info):
+        self.learned_doc2vec_list.append(doc2vec_info)
+
+    def reset_plots(self):
+        self.plots = list()
+
+    def add_plot(self, plot_h):
+        self.plots.append(plot_h)
+
+    def test_random_batch(self, spam_mail_vector, ham_mail_vector):
+        test_batch = list()
+        vector_batch = list()
+        type_batch = list()
+
+        vector_batch.extend(spam_mail_vector)
+        vector_batch.extend(ham_mail_vector)
+        test_batch.append(vector_batch)
+
+        type_batch.extend([[0.0, 1.0]
+                           for _ in range(len(spam_mail_vector))])  # spam
+        type_batch.extend([[1.0, 0.0]
+                           for _ in range(len(ham_mail_vector))])  # ham
+        test_batch.append(type_batch)
+
+        return test_batch
+
+    def train_random_batch(self, spam_mail_vector, ham_mail_vector):
         train_batch = list()
         vector_batch = list()
         type_batch = list()
 
-        vector_batch.extend(mail_vector.spam_vector[:self.batch_size])
-        vector_batch.extend(mail_vector.ham_vector[:self.batch_size])
+        if (self.iteration + 1) * self.batch_size >= len(spam_mail_vector):
+            vector_batch.extend(
+                spam_mail_vector[self.iteration*self.batch_size:])
+            vector_batch.extend(
+                random.sample(spam_mail_vector[:self.iteration*self.batch_size], self.batch_size - len(spam_mail_vector[self.iteration*self.batch_size:])))
+
+            vector_batch.extend(
+                ham_mail_vector[self.iteration*self.batch_size:])
+            vector_batch.extend(
+                random.sample(ham_mail_vector[:self.iteration*self.batch_size], self.batch_size - len(ham_mail_vector[self.iteration*self.batch_size:])))
+
+            self.iteration_reset()
+            random.shuffle(spam_mail_vector)
+            random.shuffle(ham_mail_vector)
+        else:
+            vector_batch.extend(
+                spam_mail_vector[self.iteration*self.batch_size:(self.iteration + 1)*self.batch_size])
+            vector_batch.extend(
+                ham_mail_vector[self.iteration*self.batch_size:(self.iteration + 1)*self.batch_size])
+
+        self.iteration_up()
 
         train_batch.append(vector_batch)
 
         type_batch.extend([[0.0, 1.0] for _ in range(self.batch_size)])  # spam
-
         type_batch.extend([[1.0, 0.0] for _ in range(self.batch_size)])  # ham
+        train_batch.append(type_batch)
 
         return train_batch
 
-    def test(self, iter):
-        test_batch = self.random_batch(self.doc2vec_info_list[0])
+    def test(self, iter, l):
+        plt.subplot(1, len(self.lams), l + 1)
 
-        test_feed_dict = {self.nn_model_info.mail_doc2vec: np.array(
-            test_batch[0]), self.nn_model_info.mail_class: np.array(test_batch[1])}
+        for doc2vec_info_id, doc2vec_info in enumerate(self.learned_doc2vec_list):
+            test_batch = self.test_random_batch(
+                doc2vec_info.test_spam_vector, doc2vec_info.test_ham_vector)
 
-        self.test_accs[int(iter/self.disp_freq)
-                       ] = self.nn_model_info.nn_model.accuracy.eval(feed_dict=test_feed_dict)
+            test_feed_dict = {self.nn_model_info.mail_doc2vec: np.array(
+                test_batch[0]), self.nn_model_info.mail_class: np.array(test_batch[1])}
 
-        plt.plot(range(1, iter + 2, self.disp_freq), self.test_accs)
-        plt.show()
+            self.test_accs[doc2vec_info_id][int(
+                iter/self.disp_freq)] = self.nn_model_info.nn_model.accuracy.eval(feed_dict=test_feed_dict)
 
+            plot_h, _ = plt.plot(range(1, iter + 2, self.disp_freq),
+                                 self.test_accs[doc2vec_info_id][:int(iter / self.disp_freq) + 1], label=doc2vec_info.mail_type)
+
+            self.add_plot(plot_h)
+
+        self.plot_test_acc(self.plots)
+
+        if l == 0:
+            plt.title("Stochastic Gradient Descent")  # 確率的勾配降下法
+        else:
+            plt.title("Elastic Weight Consolidation")
+
+    @cal_time
     def train(self):
-        for l in range(len(self.lams)):
-            self.nn_model_info.nn_model.restore(self.nn_model_info.sess)
+        for doc2vec_info_id, doc2vec_info in enumerate(self.doc2vec_info_list):
+            self.add_learned_doc2vec(doc2vec_info)
 
-            if (self.lams[l] == 0):
-                self.nn_model_info.nn_model.set_vanilla_loss()
-            else:
-                self.nn_model_info.nn_model.update_ewc_loss(self.lams[l])
+            for l in range(len(self.lams)):
+                """
+                学習準備
+                """
+                self.nn_model_info.nn_model.restore(self.nn_model_info.sess)
 
-            self.set_test_accs()
+                if (self.lams[l] == 0):
+                    self.nn_model_info.nn_model.set_vanilla_loss()
+                else:
+                    if doc2vec_info_id == 0:  # 一つ目のdoc2vecは追加学習しない
+                        break
 
-            for iter in range(self.num_iter):
-                train_batch = self.random_batch(
-                    self.doc2vec_info_list[0])
+                    self.nn_model_info.nn_model.update_ewc_loss(self.lams[l])
 
-                train_feed_dict = {self.nn_model_info.mail_doc2vec: np.array(
-                    train_batch[0]), self.nn_model_info.mail_class: np.array(train_batch[1])}
+                self.set_test_accs(doc2vec_info_id)
 
-                self.nn_model_info.nn_model.train_step.run(
-                    feed_dict=train_feed_dict)
+                """
+                学習実行
+                """
+                for iter in range(self.num_iter):
+                    train_batch = self.train_random_batch(
+                        doc2vec_info.train_spam_vector, doc2vec_info.train_ham_vector)
 
-                if iter % self.disp_freq == 0:
-                    self.test(iter)
+                    train_feed_dict = {self.nn_model_info.mail_doc2vec: np.array(
+                        train_batch[0]), self.nn_model_info.mail_class: np.array(train_batch[1])}
+
+                    self.nn_model_info.nn_model.train_step.run(
+                        feed_dict=train_feed_dict)
+
+                    """
+                    self.disp_freq回学習するごとにテスト実行
+                    """
+                    if iter % self.disp_freq == 0:
+                        self.test(iter, l)
+
+            plt.show()
+
+            self.nn_model_info.nn_model.compute_fisher(
+                doc2vec_info.fisher_vector, self.nn_model_info.sess, num_samples=200)
+            self.nn_model_info.nn_model.star()
 
 
 class Doc2vecInformation:
     def __init__(self):
         self.file_path = str()
         self.mail_type = str()
-        self.spam_vector = list()
-        self.ham_vector = list()
+        self.train_spam_vector = list()
+        self.train_ham_vector = list()
+        self.test_spam_vector = list()
+        self.test_ham_vector = list()
+        self.fisher_vector = list()  # フィッシャー情報行列を計算するためのベクトル
         self.border = 0
 
     def separata_spam_and_ham(self, model):
         vector = [model.docvecs[i] for i in range(len(model.docvecs))]
-        self.spam_vector = vector[:self.border]
-        self.ham_vector = vector[self.border:]
+
+        print(len(vector))
+
+        self.train_spam_vector = vector[:int(self.border / 2)]
+        self.train_ham_vector = vector[self.border:self.border +
+                                       int(self.border / 2)]
+        self.test_spam_vector = vector[int(self.border / 2):self.border]
+        self.test_ham_vector = vector[self.border + int(self.border / 2):]
+
+        self.fisher_vector.extend(random.sample(self.train_spam_vector, 100))
+        self.fisher_vector.extend(random.sample(self.train_ham_vector, 100))
 
     def set_file_path(self, path):
         self.file_path = path
@@ -120,7 +225,7 @@ class Doc2vecInformation:
         self.border = border
 
     def get_vector_size(self):
-        return len(self.spam_vector)
+        return len(self.train_spam_vector[0])
 
 
 class NeuralNetworkInformation:
@@ -155,16 +260,23 @@ def read_doc2vec(doc2vec_info_list):
         doc2vec_info_list.append(doc2vec_info)
 
         # 読み込みを終わる場合はfを入力
-        finish_flag = input('Push f to finish >>')
+        finish_flag = input('Push f(or F) to finish >>')
         if finish_flag == 'f' or finish_flag == 'F':
             break
 
 
-doc2vec_info_list = []
-read_doc2vec(doc2vec_info_list)
+def main():
+    doc2vec_info_list = []
+    read_doc2vec(doc2vec_info_list)
 
-nn_model_info = NeuralNetworkInformation(
-    doc2vec_info_list[0].get_vector_size())
-nn_model_info.sess_run()
+    nn_model_info = NeuralNetworkInformation(
+        doc2vec_info_list[0].get_vector_size())
 
-Train_and_Test(doc2vec_info_list, nn_model_info).train()
+    nn_model_info.sess_run()
+
+    Train_and_Test(doc2vec_info_list, nn_model_info).train()
+
+
+# このファイル自体をimportする予定は無いが，誰かに使ってもらえる場合を想定して一応．．．
+if __name__ == "__main__":
+    main()
