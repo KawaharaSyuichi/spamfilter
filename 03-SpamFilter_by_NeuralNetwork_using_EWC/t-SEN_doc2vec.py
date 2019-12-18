@@ -76,37 +76,38 @@ def t_SEN_plot_all(doc2vec_array_data):
     # plt.colorbar()
     plt.show()
 
+
+def main():
     # 読み込むdoc2vecモデルのリスト
-model_file_list = ["doc2vec_models/doc2vec_english.model",
-                   "doc2vec_models/doc2vec_japanese.model"]
+    model_file_list = ["doc2vec_models/doc2vec_english.model",
+                       "doc2vec_models/doc2vec_japanese.model"]
 
-doc2vec_spam_array_data = []
-doc2vec_ham_array_data = []
+    doc2vec_spam_array_data = []
+    doc2vec_ham_array_data = []
+
+    for doc2vec_model_file in model_file_list:
+        # 同じ言語のスパムメールと正規メールの分布を求める
+        t_SEN_plot_same_language(doc2vec_model_file)
+
+    for doc2vec_model_file in model_file_list:
+        doc2vec_model = Doc2Vec.load(doc2vec_model_file)
+        all_vector = [doc2vec_model.docvecs[num]
+                      for num in range(len(doc2vec_model.docvecs))]
+        doc2vec_spam_array_data.extend(all_vector[:1000])  # spam
+        doc2vec_ham_array_data.extend(all_vector[1000:])  # ham
+
+    # t_SEN_plot_same_mail_type(doc2vec_spam_array_data)
+    t_SEN_plot_same_mail_type(doc2vec_ham_array_data)
+
+    doc2vec_array_data = []
+    for doc2vec_model_file in model_file_list:
+        doc2vec_model = Doc2Vec.load(doc2vec_model_file)
+        all_vector = [doc2vec_model.docvecs[num]
+                      for num in range(len(doc2vec_model.docvecs))]
+        doc2vec_array_data.extend(all_vector)
+
+    t_SEN_plot_all(doc2vec_array_data)
 
 
-"""
-for doc2vec_model_file in model_file_list:
-    # 同じ言語のスパムメールと正規メールの分布を求める
-    t_SEN_plot_same_language(doc2vec_model_file)
-"""
-
-"""
-for doc2vec_model_file in model_file_list:
-    doc2vec_model = Doc2Vec.load(doc2vec_model_file)
-    all_vector = [doc2vec_model.docvecs[num]
-                  for num in range(len(doc2vec_model.docvecs))]
-    doc2vec_spam_array_data.extend(all_vector[:1000])  # spam
-    doc2vec_ham_array_data.extend(all_vector[1000:])  # ham
-
-# t_SEN_plot_same_mail_type(doc2vec_spam_array_data)
-t_SEN_plot_same_mail_type(doc2vec_ham_array_data)
-"""
-
-doc2vec_array_data = []
-for doc2vec_model_file in model_file_list:
-    doc2vec_model = Doc2Vec.load(doc2vec_model_file)
-    all_vector = [doc2vec_model.docvecs[num]
-                  for num in range(len(doc2vec_model.docvecs))]
-    doc2vec_array_data.extend(all_vector)
-
-t_SEN_plot_all(doc2vec_array_data)
+if __name__ == "__main__":
+    main()
