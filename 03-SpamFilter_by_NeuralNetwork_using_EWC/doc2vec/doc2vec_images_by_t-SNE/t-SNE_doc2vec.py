@@ -26,7 +26,6 @@ def t_SEN_plot_same_language(doc2vec_model_file):
                 c="none", label="ham", edgecolors="blue", linewidth=0.5)
 
     plt.legend(loc="lower right")
-    # plt.colorbar()
     plt.show()
 
 
@@ -72,7 +71,6 @@ def t_SEN_plot_all(doc2vec_array_data):
                 c="none", label="japanese ham", edgecolors="black", linewidth=0.5)
 
     plt.legend(loc="lower right")
-    # plt.colorbar()
     plt.show()
 
 
