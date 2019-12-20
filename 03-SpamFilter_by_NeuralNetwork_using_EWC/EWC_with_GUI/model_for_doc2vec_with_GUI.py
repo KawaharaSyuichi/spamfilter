@@ -1,11 +1,5 @@
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import random
-
-from copy import deepcopy  # 完全に新しいデータとしてメモリに生成する
-from IPython import display  # Jupyter notebookで図を表示
 
 
 def weight_variable(shape):
@@ -119,23 +113,11 @@ class Model:
         if not hasattr(self, "ewc_loss"):
             self.ewc_loss = self.cross_entropy
 
-        #self.var_list = [W1, b1, W2, b2]
-        #parameters_fisher = np.zeros((4, 4))
         for v in range(len(self.var_list)):
             fisher = (lam / 2) * tf.reduce_sum(tf.multiply(self.F_accum[v].astype(
                 np.float32), tf.square(self.var_list[v] - self.star_vars[v])))
 
             self.ewc_loss += fisher
-
-            # with tf.Session() as sess:
-            #    fisher = sess.run(fisher)
-
-            #parameters_fisher[v, v] = fisher
-
-        #df = pd.DataFrame(data=parameters_fisher, index=['W1', 'b1', 'W2', 'b2'], columns=['W1', 'b1', 'W2', 'b2'])
-        # plt.figure()
-        #sns.heatmap(df, cmap='Blues')
-        # plt.show()
 
         self.train_step = tf.train.GradientDescentOptimizer(
             0.001).minimize(self.ewc_loss)  # 学習率0.1として、ewcで求めた損失関数値を最小にするようにパラメータを学習する。
