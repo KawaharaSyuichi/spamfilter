@@ -95,37 +95,6 @@ def random_batch(trainset, batch_size, month_flag, start_idx, train_flag=True):
 
             idx.extend(idx_1)
 
-            """
-            spam_half_start = start_idx * half_batch_size
-            spam_half_end = (start_idx + 1) * half_batch_size
-            ham_half_start = 1000 + start_idx * half_batch_size
-            ham_half_end = 1000 + (start_idx + 1) * half_batch_size
-
-            if spam_half_end > 500:  # この場合、spam_half_start=450,ham_half_start=1450
-                idx = [num for num in range(spam_half_start, 500)]
-                idx.extend(random.sample(
-                    range(spam_half_start), k=half_batch_size - len(idx)))
-
-                spam_half = trainset[:500]
-                ham_half = trainset[1000:1500]
-                random.shuffle(spam_half)
-                random.shuffle(ham_half)
-                trainset[:500] = spam_half
-                trainset[1000:1500] = ham_half
-
-                idx_1 = [num for num in range(ham_half_start, 1500)]
-                idx_1.extend(random.sample(range(1000, ham_half_start),
-                                           k=half_batch_size - len(idx_1)))
-
-                return_flag = True
-            else:
-                idx = [num for num in range(spam_half_start, spam_half_end)]
-                random.shuffle(idx)
-                idx_1 = [num for num in range(ham_half_start, ham_half_end)]
-                random.shuffle(idx_1)
-
-            idx.extend(idx_1)
-            """
         else:
             # May(4000呼のデータ)(spam:0~1999,ham:2000~3999)
             # idx = random.sample(range(500), k=int(batch_size / 2))
@@ -159,38 +128,6 @@ def random_batch(trainset, batch_size, month_flag, start_idx, train_flag=True):
                 random.shuffle(idx_1)
 
             idx.extend(idx_1)
-
-            """
-            spam_half_start = start_idx * half_batch_size
-            spam_half_end = (start_idx + 1) * half_batch_size
-            ham_half_start = 1000 + start_idx * half_batch_size
-            ham_half_end = 1000 + (start_idx + 1) * half_batch_size
-
-            if spam_half_end > 500:  # この場合、spam_half_start=450,ham_half_start=1450
-                idx = [num for num in range(spam_half_start, 500)]
-                idx.extend(random.sample(
-                    range(spam_half_start), k=half_batch_size - len(idx)))
-
-                spam_half = trainset[:500]
-                ham_half = trainset[1000:1500]
-                random.shuffle(spam_half)
-                random.shuffle(ham_half)
-                trainset[:500] = spam_half
-                trainset[1000:1500] = ham_half
-
-                idx_1 = [num for num in range(ham_half_start, 1500)]
-                idx_1.extend(random.sample(range(1000, ham_half_start),
-                                           k=half_batch_size - len(idx_1)))
-
-                return_flag = True
-            else:
-                idx = [num for num in range(spam_half_start, spam_half_end)]
-                random.shuffle(idx)
-                idx_1 = [num for num in range(ham_half_start, ham_half_end)]
-                random.shuffle(idx_1)
-
-            idx.extend(idx_1)
-            """
 
     elif train_flag == False:  # 検証用
         if month_flag == 0:  # March
