@@ -3,11 +3,6 @@ import numpy as np
 from copy import deepcopy  # 完全に新しいデータとしてメモリに生成する
 import matplotlib.pyplot as plt
 from IPython import display  # Jupyter notebookで図を表示
-import random
-
-#import seaborn as sns
-#import pandas as pd
-import matplotlib as mpl
 
 # variable initialization functions
 

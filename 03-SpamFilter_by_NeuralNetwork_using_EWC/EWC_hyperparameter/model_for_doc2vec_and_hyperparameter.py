@@ -1,7 +1,6 @@
 # coding: UTF-8
 import gensim
 import random
-import sys
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt

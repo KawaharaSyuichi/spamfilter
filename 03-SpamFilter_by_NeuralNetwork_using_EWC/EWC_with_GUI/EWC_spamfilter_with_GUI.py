@@ -1,5 +1,4 @@
 import random
-import sys
 import doc2vec_model_select  # 自作のライブラリ
 import time
 import tensorflow as tf

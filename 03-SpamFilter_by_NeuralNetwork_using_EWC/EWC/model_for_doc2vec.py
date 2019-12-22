@@ -1,8 +1,6 @@
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
-import random
 
 from copy import deepcopy  # 完全に新しいデータとしてメモリに生成する
 from IPython import display  # Jupyter notebookで図を表示
