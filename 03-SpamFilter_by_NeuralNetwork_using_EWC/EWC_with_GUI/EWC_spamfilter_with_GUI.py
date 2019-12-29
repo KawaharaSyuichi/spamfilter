@@ -1,13 +1,13 @@
+from gensim.models import Doc2Vec
+from model_for_doc2vec_with_GUI import Model  # 自作のライブラリ
+from IPython import display
+
 import random
 import doc2vec_model_select  # 自作のライブラリ
 import time
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-
-from IPython import display
-from model_for_doc2vec_with_GUI import Model  # 自作のライブラリ
-from gensim.models import Doc2Vec
 
 
 def cal_time(func):  # 実行時間の計測
@@ -25,8 +25,8 @@ class Train_and_Test:
         self.doc2vec_info_list = doc2vec_info_list
         self.lams = [0, 40]
         self.num_iter = 320
-        self.batch_size = 40  # spamとhamで，合計80バッチ
         self.disp_freq = 20
+        self.batch_size = 40  # spamとhamで，合計80バッチ
         self.test_accs = np.zeros(int(self.num_iter / self.disp_freq))
         self.iteration = 0
         self.learned_doc2vec_list = list()
@@ -202,8 +202,6 @@ class Doc2vecInformation:
 
     def separata_spam_and_ham(self, model):
         vector = [model.docvecs[i] for i in range(len(model.docvecs))]
-
-        print(len(vector))
 
         self.train_spam_vector = vector[:int(self.border / 2)]
         self.train_ham_vector = vector[self.border:self.border +
