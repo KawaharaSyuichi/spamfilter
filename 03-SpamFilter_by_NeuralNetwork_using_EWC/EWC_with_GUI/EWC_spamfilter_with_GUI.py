@@ -130,8 +130,8 @@ class Train_and_Test:
             self.test_accs[doc2vec_info_id][int(
                 iter/self.disp_freq)] = self.nn_model_info.nn_model.accuracy.eval(feed_dict=test_feed_dict)
 
-            plot_h, _ = plt.plot(range(1, iter + 2, self.disp_freq),
-                                 self.test_accs[doc2vec_info_id][:int(iter / self.disp_freq) + 1], label=doc2vec_info.mail_type)
+            plot_h,  = plt.plot(range(1, iter + 2, self.disp_freq),
+                                self.test_accs[doc2vec_info_id][:int(iter / self.disp_freq) + 1], label=doc2vec_info.mail_type)
 
             self.add_plot(plot_h)
 
@@ -182,11 +182,12 @@ class Train_and_Test:
                     if iter % self.disp_freq == 0:
                         self.test(iter, l)
 
-            plt.show()
+            plt.savefig(doc2vec_info.mail_type + ".png")
 
-            self.nn_model_info.nn_model.compute_fisher(
-                doc2vec_info.fisher_vector, self.nn_model_info.sess, num_samples=200)
-            self.nn_model_info.nn_model.star()
+            if doc2vec_info_id + 1 != len(self.doc2vec_info_list):
+                self.nn_model_info.nn_model.compute_fisher(
+                    doc2vec_info.fisher_vector, self.nn_model_info.sess, num_samples=200)
+                self.nn_model_info.nn_model.star()
 
 
 class Doc2vecInformation:
