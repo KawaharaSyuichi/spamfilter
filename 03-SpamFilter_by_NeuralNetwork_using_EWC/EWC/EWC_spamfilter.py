@@ -79,11 +79,6 @@ def random_batch(trainset, batch_size, month_flag, start_idx, train_flag=True):
             print("#" * 50)
             print("train_ephoc:{}".format(train_ephoc))
             print("#" * 50)
-    elif return_flag == True and train_flag == False:
-        test_ephoc += 1
-        print("*" * 50)
-        print("test_ephoc:{}".format(test_ephoc))
-        print("*" * 50)
 
     return batch, return_flag
 
