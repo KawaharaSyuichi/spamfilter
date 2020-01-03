@@ -65,7 +65,7 @@ def random_batch(trainset, batch_size, month_flag, start_idx, train_flag=True):
     for num in idx:
         docvec.append(trainset[num])
 
-        if num < 500:
+        if num < 1000:
             docflag.append([0.0, 1.0])  # spam
         else:
             docflag.append([1.0, 0.0])  # ham
@@ -155,7 +155,7 @@ def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mai
                 plt.subplot(1, len(lams), l + 1)
 
                 plots = []
-                colors = ['r', 'b', 'c']
+                #colors = ['r', 'b', 'c']
 
                 for task in range(len(testsets)):
                     # テストデータの推定値
@@ -216,8 +216,10 @@ def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mai
                         print("EWC" + " " + c + ":" +
                               str(test_accs[task][int(iter / disp_freq)]))
 
+                    #plot_h, = plt.plot(range(1, iter + 2, disp_freq), test_accs[task][:int(iter / disp_freq) + 1], colors[task], label=c)
+
                     plot_h, = plt.plot(range(
-                        1, iter + 2, disp_freq), test_accs[task][:int(iter / disp_freq) + 1], colors[task], label=c)
+                        1, iter + 2, disp_freq), test_accs[task][:int(iter / disp_freq) + 1], label=c)
 
                     plots.append(plot_h)
 
@@ -307,42 +309,44 @@ english_doc2vec_latter_half_list = [english_doc2vec_latter_half.docvecs[num]
 list_1 = list(range(1000))
 list_1.extend(list(range(5000, 6000)))
 english_doc2vec_1_list = [
-    english_doc2vec_first_half_list.docvecs[num] for num in list_1]
+    english_doc2vec_first_half_list[num] for num in list_1]
 
 list_2 = list(range(1000, 2000))
 list_2.extend(list(range(6000, 7000)))
 english_doc2vec_2_list = [
-    english_doc2vec_first_half_list.docvecs[num] for num in list_2]
+    english_doc2vec_first_half_list[num] for num in list_2]
 
 list_3 = list(range(2000, 3000))
 list_3.extend(list(range(7000, 8000)))
 english_doc2vec_3_list = [
-    english_doc2vec_first_half_list.docvecs[num] for num in list_3]
+    english_doc2vec_first_half_list[num] for num in list_3]
 
 list_4 = list(range(3000, 4000))
 list_4.extend(list(range(8000, 9000)))
 english_doc2vec_4_list = [
-    english_doc2vec_first_half_list.docvecs[num] for num in list_4]
+    english_doc2vec_first_half_list[num] for num in list_4]
 
 list_5 = list(range(4000, 5000))
 list_5.extend(list(range(9000, 10000)))
 english_doc2vec_5_list = [
-    english_doc2vec_first_half_list.docvecs[num] for num in list_5]
+    english_doc2vec_first_half_list[num] for num in list_5]
 
 english_doc2vec_6_list = [
-    english_doc2vec_latter_half_list.docvecs[num] for num in list_1]
+    english_doc2vec_latter_half_list[num] for num in list_1]
 
 english_doc2vec_7_list = [
-    english_doc2vec_latter_half_list.docvecs[num] for num in list_2]
+    english_doc2vec_latter_half_list[num] for num in list_2]
 
 english_doc2vec_8_list = [
-    english_doc2vec_latter_half_list.docvecs[num] for num in list_3]
+    english_doc2vec_latter_half_list[num] for num in list_3]
 
 english_doc2vec_9_list = [
-    english_doc2vec_latter_half_list.docvecs[num] for num in list_4]
+    english_doc2vec_latter_half_list[num] for num in list_4]
 
 english_doc2vec_10_list = [
-    english_doc2vec_latter_half_list.docvecs[num] for num in list_5]
+    english_doc2vec_latter_half_list[num] for num in list_5]
+
+print(len(english_doc2vec_10_list[0]))
 
 sess = tf.InteractiveSession()
 

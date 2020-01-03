@@ -77,7 +77,7 @@ class Model:
             mean_diffs = np.zeros(0)
 
         sum_validation = []
-        sum_validation.extend(list(range(2000, 2100)))  # [1000,1001,...,1099]
+        sum_validation.extend(list(range(1000, 1100)))  # [1000,1001,...,1099]
         sum_validation.extend(list(range(100)))  # [0,1,2,...,99]
 
         for i in range(num_samples):  # num_samples=200
