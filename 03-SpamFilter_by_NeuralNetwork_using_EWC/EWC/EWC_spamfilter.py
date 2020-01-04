@@ -32,20 +32,20 @@ def random_batch(trainset, batch_size, month_flag, start_idx, train_flag=True):
         ham_half_start = 1100 + start_idx * half_batch_size
         ham_half_end = 1100 + (start_idx + 1) * half_batch_size
 
-        if spam_half_end > 500:
-            idx = [num for num in range(spam_half_start, 500)]
+        if spam_half_end > 1000:
+            idx = [num for num in range(spam_half_start, 1000)]
             idx.extend(random.sample(range(100, spam_half_start),
                                      k=half_batch_size - len(idx)))
-            idx_1 = [num for num in range(ham_half_start, 1500)]
+            idx_1 = [num for num in range(ham_half_start, 2000)]
             idx_1.extend(random.sample(range(1100, ham_half_start),
                                        k=half_batch_size - len(idx_1)))
 
-            spam_half = trainset[100:500]
-            ham_half = trainset[1100:1500]
+            spam_half = trainset[100:1000]
+            ham_half = trainset[1100:2000]
             random.shuffle(spam_half)
             random.shuffle(ham_half)
-            trainset[100:500] = spam_half
-            trainset[1100:1500] = ham_half
+            trainset[100:1000] = spam_half
+            trainset[1100:2000] = ham_half
 
             return_flag = True
         else:
@@ -57,8 +57,8 @@ def random_batch(trainset, batch_size, month_flag, start_idx, train_flag=True):
         idx.extend(idx_1)
 
     elif train_flag == False:  # 検証用
-        idx = [num for num in range(500, 1000)]
-        idx_1 = [num for num in range(1500, 2000)]
+        idx = [num for num in range(100, 1000)]
+        idx_1 = [num for num in range(1100, 2000)]
 
         idx.extend(idx_1)
 
@@ -86,7 +86,7 @@ def random_batch(trainset, batch_size, month_flag, start_idx, train_flag=True):
 def plot_test_acc(plot_handles):
     plt.legend(handles=plot_handles, loc="lower right")
     plt.xlabel("Iterations")
-    plt.ylabel("Test Accuracy")
+    plt.ylabel("Training Accuracy")
     plt.yticks(np.arange(0.0, 1.1, 0.1))
     plt.xticks(np.arange(0, 310, 50))
     plt.ylim(0.0, 1.01)
@@ -155,7 +155,7 @@ def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mai
                 for task in range(len(testsets)):
                     # テストデータの推定値
                     test_batch, return_flag = random_batch(
-                        testsets[task], 1000, 0, March_start_idx, train_flag=False)
+                        testsets[task], 2000, 0, March_start_idx, train_flag=False)
 
                     feed_dict = {mail_doc2vec: np.array(
                         test_batch[0]), mail_class: np.array(test_batch[1])}
