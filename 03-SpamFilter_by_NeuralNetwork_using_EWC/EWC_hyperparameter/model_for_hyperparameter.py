@@ -157,15 +157,5 @@ class Model:
 
             self.ewc_loss += fisher
 
-            # with tf.Session() as sess:
-            #    fisher = sess.run(fisher)
-
-            #parameters_fisher[v, v] = fisher
-
-        #df = pd.DataFrame(data=parameters_fisher, index=['W1', 'b1', 'W2', 'b2'], columns=['W1', 'b1', 'W2', 'b2'])
-        # plt.figure()
-        #sns.heatmap(df, cmap='Blues')
-        # plt.show()
-
         self.train_step = tf.train.GradientDescentOptimizer(
             0.1).minimize(self.ewc_loss)  # 学習率0.1として、ewcで求めた損失関数値を最小にするようにパラメータを学習する。
