@@ -1,5 +1,0 @@
-@startuml EWC_spamfilter_with_GUI
-
-(*) --> "Read doc2vec file"
-
-@enduml
