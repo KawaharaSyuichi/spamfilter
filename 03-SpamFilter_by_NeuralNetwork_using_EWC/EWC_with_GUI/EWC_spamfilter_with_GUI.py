@@ -33,7 +33,7 @@ class Train_and_Test:
         self.plots = list()
 
     def plot_test_acc(self, plot_handles):
-        plt.legend(handles=plot_handles, loc="lower right")
+        plt.legend(handles=plot_handles, loc="best")
         plt.xlabel("Iterations")
         plt.ylabel("Test Accuracy")
         plt.yticks(np.arange(0.0, 1.1, 0.1))

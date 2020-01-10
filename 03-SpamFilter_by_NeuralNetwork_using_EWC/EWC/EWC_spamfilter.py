@@ -84,7 +84,7 @@ def random_batch(trainset, batch_size, month_flag, start_idx, train_flag=True):
 
 
 def plot_test_acc(plot_handles):
-    plt.legend(handles=plot_handles, loc="lower right")
+    plt.legend(handles=plot_handles, loc="best")
     plt.xlabel("Iterations")
     plt.ylabel("Training Accuracy")
     plt.yticks(np.arange(0.0, 1.1, 0.1))
