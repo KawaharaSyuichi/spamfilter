@@ -31,6 +31,8 @@ Elastic Weight Consolidationでは、過去に学習したデータの正解率�
 
 <img src="https://latex.codecogs.com/gif.latex?L=-\sum_{i=1}^{n}t_i\log&space;y_i"/>
 
+ここで，<img src="https://latex.codecogs.com/gif.latex?y_i">は出力層のi番目の出力値，<img src="https://latex.codecogs.com/gif.latex?t_i">は教師ラベルで，入力されたデータのクラス情報が含まれている．
+
 
 # 論文 URL
 [論文説明](https://www.ieice.org/ken/paper/20190723N1Of/)
