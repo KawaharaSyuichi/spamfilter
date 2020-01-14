@@ -33,6 +33,22 @@ Elastic Weight Consolidationでは、過去に学習したデータの正解率�
 
 ここで，<img src="https://latex.codecogs.com/gif.latex?y_i">は出力層のi番目の出力値，<img src="https://latex.codecogs.com/gif.latex?t_i">は教師ラベルで，入力されたデータのクラス情報が含まれている．
 
+損失を小さくするための重みの更新方法として様々な手法が存在する．ここでは，本研究でも使用する確率的勾配降下法について説明する．
+
+確率的勾配降下法では，損失関数Lを用いて以下の式に示すように，重みを更新する．
+
+<img src="https://latex.codecogs.com/gif.latex?W^{'}&space;\leftarrow&space;W-\eta&space;\frac{\partial&space;L}{\partial&space;W}">
+
+ここで，<img src="https://latex.codecogs.com/gif.latex?W^{'}">は更新後の重み，<img src="https://latex.codecogs.com/gif.latex?W">は更新前の重みを表している．また，<img src="https://latex.codecogs.com/gif.latex?\frac{\partial&space;L}{\partial&space;W}">は重み<img src="https://latex.codecogs.com/gif.latex?W">に関する損失関数の勾配，<img src="https://latex.codecogs.com/gif.latex?\eta">は学習係数を表しており，重みの更新量を制御するための係数である．
+
+EWCを用いたニューラルネットワークで追加学習を行う場合，損失関数Lを以下の式で計算する．
+
+<img src="https://latex.codecogs.com/gif.latex?\mathcal{L}(\theta)=\mathcal{L}_{B}(\theta)&plus;\frac{\lambda}{2}\sum_{i}F_{i}(\theta_{i}-\theta_{A,i}^{*})^{2}">
+
+上式の右辺の<img src="https://latex.codecogs.com/gif.latex?\mathcal{L}_{B}(\theta)">は新たに学習するデータBの追加学習を行う場合に得られる損失であり，EWCではこの損失<img src="https://latex.codecogs.com/gif.latex?\mathcal{L}_{B}(\theta)">に<img src="https://latex.codecogs.com/gif.latex?\frac{\lambda}{2}\sum_{i}F_{i}(\theta_{i}-\theta_{A,i}^{*})^{2}">を加算する．
+<img src="https://latex.codecogs.com/gif.latex?F_{i}">はデータAに対するパラメータ(重みとバイアス)のフィッシャー情報行列， <img src="https://latex.codecogs.com/gif.latex?\theta_{i}">がデータBの学習時に使用するパラメータ， <img src="https://latex.codecogs.com/gif.latex?\theta_{A,i}^{*}">がデータAの学習時に使用したパラメータを表している． <img src="https://latex.codecogs.com/gif.latex?\frac{\lambda}{2}\sum_{i}F_{i}(\theta_{i}-\theta_{A,i}^{*})^{2}">には，以前に学習したデータAを学習して得られたパラメータのうち，データAを識別するために重要なパラメータの要素の情報を含んでいる．
+
+EWCでは式<img src="https://latex.codecogs.com/gif.latex?\mathcal{L}(\theta)">で計算された損失の値を小さくなるように学習を行い，メールのデータAに対して重要なパラメータの要素の更新を遅らせることで，過去に学習した情報の忘却を軽減する．
 
 # 論文 URL
 [論文説明](https://www.ieice.org/ken/paper/20190723N1Of/)
