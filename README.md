@@ -39,7 +39,7 @@ Elastic Weight Consolidationでは、過去に学習したデータの正解率�
 
 <img src="https://latex.codecogs.com/gif.latex?W^{'}&space;\leftarrow&space;W-\eta&space;\frac{\partial&space;L}{\partial&space;W}">
 
-ここで，<img src="https://latex.codecogs.com/gif.latex?W^{'}">は更新後の重み，<img src="https://latex.codecogs.com/gif.latex?W">は更新前の重みを表している．また，<img src="https://latex.codecogs.com/gif.latex?\frac{\partial&space;L}{\partial&space;W}">は重み<img src="https://latex.codecogs.com/gif.latex?W">に関する損失関数の勾配，<img src="https://latex.codecogs.com/gif.latex?\eta">は学習係数を表しており，重みの更新量を制御するための係数である．
+ここで，<img src="https://latex.codecogs.com/gif.latex?W^{'}">は更新後の重み，<img src="https://latex.codecogs.com/gif.latex?W">は更新前の重みを表している．また，<img src="https://latex.codecogs.com/gif.latex?\frac{\partial&space;L}{\partial&space;W}" width="10" height="10">は重み<img src="https://latex.codecogs.com/gif.latex?W">に関する損失関数の勾配，<img src="https://latex.codecogs.com/gif.latex?\eta">は学習係数を表しており，重みの更新量を制御するための係数である．
 
 EWCを用いたニューラルネットワークで追加学習を行う場合，損失関数Lを以下の式で計算する．
 
