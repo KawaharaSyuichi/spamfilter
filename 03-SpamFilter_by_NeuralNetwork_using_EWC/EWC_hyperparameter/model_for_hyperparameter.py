@@ -1,10 +1,8 @@
-import tensorflow as tf
 import numpy as np
-from copy import deepcopy  # 完全に新しいデータとしてメモリに生成する
+import tensorflow as tf
 import matplotlib.pyplot as plt
+from copy import deepcopy  # 完全に新しいデータとしてメモリに生成する
 from IPython import display  # Jupyter notebookで図を表示
-
-# variable initialization functions
 
 
 def weight_variable(shape):
@@ -78,7 +76,7 @@ class Model:
             mean_diffs = np.zeros(0)
 
         sum_validation = []
-        sum_validation.extend(list(range(2000, 2100)))  # [1000,1001,...,1099]
+        sum_validation.extend(list(range(2000, 2100)))  # [2000,1001,...,2099]
         sum_validation.extend(list(range(100)))  # [0,1,2,...,99]
 
         for i in range(num_samples):  # num_samples=200
