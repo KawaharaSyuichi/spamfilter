@@ -127,23 +127,10 @@ def random_batch(trainset, batch_size, month_flag, start_idx, train_flag=True):
 
             idx.extend(idx_1)
     elif train_flag == False:  # 検証用
-        if month_flag == 0:  # March
-            idx = [num for num in range(1000, 2000)]
-            idx_1 = [num for num in range(3000, 4000)]
+        idx = [num for num in range(1000, 2000)]
+        idx_1 = [num for num in range(3000, 3700)]
 
-            idx.extend(idx_1)
-
-        elif month_flag == 1:  # April
-
-            idx = [num for num in range(1000, 2000)]
-            idx_1 = [num for num in range(3000, 4000)]
-
-            idx.extend(idx_1)
-        else:  # May
-            idx = [num for num in range(1000, 2000)]
-            idx_1 = [num for num in range(3000, 3700)]
-
-            idx.extend(idx_1)
+        idx.extend(idx_1)
 
     for num in idx:
         docvec.append(trainset[num])
