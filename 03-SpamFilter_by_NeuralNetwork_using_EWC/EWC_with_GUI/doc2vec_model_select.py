@@ -1,57 +1,56 @@
 import os
 import sys
-from tkinter import *
+import tkinter
+import EWC_spamfilter_with_GUI
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
 
 
-def button1_clicked(file1):
+def read_doc2vec():
     fTyp = [('', '*.model')]
     iDir = '/home/'
     filepath = filedialog.askopenfilename(filetypes=fTyp, initialdir=iDir)
-    file1.set(filepath)
 
 
-def button2_clicked(file1):
+def start_learning(file1):
     messagebox.showinfo('FileReference Tool', u'参照ファイルは↓↓\n' + file1.get())
 
 
-def read_doc2vec_model():
-    root = Tk()
-    root.title("Main Menu")
+def main():
 
-    # Frame1の作成
-    frame1 = ttk.Frame(root, padding=10)
-    frame1.grid()
+    folder_path = tkinter.StringVar()
 
-    # 「ファイル>>」ラベルの作成
-    s = StringVar()
-    s.set('ファイル>>')
-    label1 = ttk.Label(frame1, textvariable=s)
-    label1.grid(row=0, column=0)
+    # メインウィンドウ
+    main_win = tkinter.Tk()
+    main_win.title("Main Window")
+    main_win.geometry("500x320")
 
-    # 参照ファイルパス表示ラベルの作成
-    file1 = StringVar()
-    file1_entry = ttk.Entry(frame1, textvariable=file1, width=50)
-    file1_entry.grid(row=0, column=2)
+    # メインフレーム
+    main_frm = ttk.Frame(main_win)
+    main_frm.grid(column=0, row=0, sticky=tkinter.NSEW, padx=5, pady=10)
 
-    # 参照ボタンの作成
-    button1 = ttk.Button(frame1, text='参照', command=button1_clicked(file1))
-    button1.grid(row=0, column=3)
+    # ウィジェット作成（フォルダパス）
+    folder_label = ttk.Label(main_frm, text="ファイル指定")
+    folder_box = ttk.Entry(main_frm, textvariable=folder_path)
+    folder_btn = ttk.Button(main_frm, text="参照", command=read_doc2vec)
 
-    # Frame2の作成
-    frame2 = ttk.Frame(root, padding=(0, 5))
-    frame2.grid(row=1)
+    # ウィジェット作成（実行ボタン）
+    app_btn = ttk.Button(main_frm, text="実行", command=start_learning)
 
-    # Startボタンの作成
-    button2 = ttk.Button(frame2, text='Start', command=button2_clicked(file1))
-    button2.pack(side=LEFT)
+    # ウィジェットの配置
+    folder_label.grid(column=0, row=0, pady=10)
+    folder_box.grid(column=1, row=0, sticky=tkinter.EW, padx=5)
+    folder_btn.grid(column=2, row=0)
+    app_btn.grid(column=1, row=2)
 
-    # Cancelボタンの作成
-    button3 = ttk.Button(frame2, text='Cancel', command=quit)
-    button3.pack(side=LEFT)
+    # 配置設定
+    main_win.columnconfigure(0, weight=1)
+    main_win.rowconfigure(0, weight=1)
+    main_frm.columnconfigure(1, weight=1)
 
-    root.mainloop()
+    main_win.mainloop()
 
-    # return filename
+
+if __name__ == "__main__":
+    main()

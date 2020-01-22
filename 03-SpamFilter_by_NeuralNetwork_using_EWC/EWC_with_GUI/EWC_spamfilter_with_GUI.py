@@ -3,7 +3,7 @@ from model_for_doc2vec_with_GUI import Model  # 自作のライブラリ
 from IPython import display
 
 import random
-import doc2vec_model_select  # 自作のライブラリ
+# import doc2vec_model_select  # 自作のライブラリ
 import time
 import tensorflow as tf
 import numpy as np
@@ -274,7 +274,4 @@ def main():
 
     Train_and_Test(doc2vec_info_list, nn_model_info).train()
 
-
-# このファイル自体をimportする予定は無いが，誰かに使ってもらえる場合を想定して一応．．．
-if __name__ == "__main__":
-    main()
+# main()
