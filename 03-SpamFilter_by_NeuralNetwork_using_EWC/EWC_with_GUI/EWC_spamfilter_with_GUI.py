@@ -239,17 +239,16 @@ class NeuralNetworkInformation:
         self.sess.run(tf.global_variables_initializer())
 
 
-def read_doc2vec(doc2vec_info_list):
-    while True:
+def read_doc2vec(doc2vec_info_list, doc2vec_file_paths, mail_types, doc2vec_borders):
+    for (doc2vec_file_path, mail_type, doc2vec_border) in zip(doc2vec_file_paths, mail_types, doc2vec_borders):
         doc2vec_info = Doc2vecInformation()
-        doc2vec_info.set_file_path(doc2vec_model_select.read_doc2vec_model())
+        # doc2vecファイルのパスを追加
+        doc2vec_info.set_file_path(doc2vec_file_path)
 
-        # 入力するdoc2vecがどの言語や，どの月のものかを入力
-        mail_type = input('Input mail type >>')
+        # 入力するdoc2vecがどの言語や，どの月のものか
         doc2vec_info.set_mail_type(mail_type)
 
         # doc2vecのどこまでがspamで，どこからがhamメールかを入力
-        doc2vec_border = input('Input doc2vec border >>')
         doc2vec_info.set_border(int(doc2vec_border))
 
         doc2vec_info.separata_spam_and_ham(
@@ -257,15 +256,10 @@ def read_doc2vec(doc2vec_info_list):
 
         doc2vec_info_list.append(doc2vec_info)
 
-        # 読み込みを終わる場合はfを入力
-        finish_flag = input('Push f(or F) to finish >>')
-        if finish_flag == 'f' or finish_flag == 'F':
-            break
 
-
-def main():
+def start(file_paths, mail_types, doc2vec_borders):
     doc2vec_info_list = []
-    read_doc2vec(doc2vec_info_list)
+    read_doc2vec(doc2vec_info_list, file_paths, mail_types, doc2vec_borders)
 
     nn_model_info = NeuralNetworkInformation(
         doc2vec_info_list[0].get_vector_size())
@@ -274,4 +268,4 @@ def main():
 
     Train_and_Test(doc2vec_info_list, nn_model_info).train()
 
-# main()
+# start()

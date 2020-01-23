@@ -14,7 +14,12 @@ def read_doc2vec():
 
 
 def start_learning(file1):
-    messagebox.showinfo('FileReference Tool', u'参照ファイルは↓↓\n' + file1.get())
+    file_paths = []
+    mail_types = []
+    doc2vec_borders = []
+
+    EWC_spamfilter_with_GUI.start(
+        file_paths, mail_types, doc2vec_borders)
 
 
 def main():
@@ -28,9 +33,9 @@ def main():
 
     # メインフレーム
     main_frm = ttk.Frame(main_win)
-    main_frm.grid(column=0, row=0, sticky=tkinter.NSEW, padx=5, pady=10)
+    main_frm.grid(column=0, row=0, sticky=tkinter.NSEW, padx=0, pady=0)
 
-    # ウィジェット作成（フォルダパス）
+    # ウィジェット作成（doc2vecファイルのパス）
     folder_label = ttk.Label(main_frm, text="ファイル指定")
     folder_box = ttk.Entry(main_frm, textvariable=folder_path)
     folder_btn = ttk.Button(main_frm, text="参照", command=read_doc2vec)
