@@ -57,7 +57,13 @@ EWCでは式<img src="https://latex.codecogs.com/gif.latex?\mathcal{L}(\theta)">
 [SITE学術奨励賞　2019年7月　「破滅的忘却を軽減するニューラルネットワークを用いたスパムフィルタの提案」](https://www.ieice.org/~site/site_award.html)
 
 # 各フォルダの説明
-- doc2vec:doc2vecで生成したベクトルとそのベクトルをt-SNEを用いて二次元の画像にプロットした画像
-- EWC:EWCを用いたデフォルトのスパムフィルタのプログラム
-- EWC_hyperparameter:中間層の数や各層のユニット数等のハイパーパラメータの最適な組み合わせを探索するプログラム
-- EWC_with_GUI:EWCを用いたデフォルトのプログラムをGUIで操作できるようにしたプログラム
+・
+|
+|_00-fundamental:EWCについての数学的な補足情報
+|_01-IMAP:メールサーバからメールを受信するためのプログラム
+|_02-NaiveBayes:ナイーブベイズを用いたスパムフィルタのプログラム
+|_03-SpamFilter_by_NeuralNetwork_using_EWC
+  |_doc2vec:doc2vecで生成したベクトルとそのベクトルをt-SNEを用いて二次元の画像にプロットした画像
+  |_EWC:EWCを用いたデフォルトのスパムフィルタのプログラム
+  |_EWC_hyperparameter:中間層の数や各層のユニット数等のハイパーパラメータの最適な組み合わせを探索するプログラム
+  |_EWC_with_GUI:EWCを用いたデフォルトのプログラムをGUIで操作できるようにしたプログラム
