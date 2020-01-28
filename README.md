@@ -50,15 +50,9 @@ EWCを用いたニューラルネットワークで追加学習を行う場合�
 
 EWCでは式<img src="https://latex.codecogs.com/gif.latex?\mathcal{L}(\theta)">で計算された損失の値を小さくなるように学習を行い，メールのデータAに対して重要なパラメータの要素の更新を遅らせることで，過去に学習した情報の忘却を軽減する．
 
-# 論文 URL
-[論文説明](https://www.ieice.org/ken/paper/20190723N1Of/)
-
-# 学会　受賞歴
-[SITE学術奨励賞　2019年7月　「破滅的忘却を軽減するニューラルネットワークを用いたスパムフィルタの提案」](https://www.ieice.org/~site/site_award.html)
-
 # 各フォルダの説明
 ・  
-|
+|  
 |_01-IMAP:メールサーバからメールを受信するためのプログラム  
 |_02-NaiveBayes:ナイーブベイズを用いたスパムフィルタのプログラム  
 |_03-SpamFilter_by_NeuralNetwork_using_EWC：私の研究に関するプログラム  
@@ -66,3 +60,10 @@ EWCでは式<img src="https://latex.codecogs.com/gif.latex?\mathcal{L}(\theta)">
 &nbsp;&nbsp; |_EWC:EWCを用いたデフォルトのスパムフィルタのプログラム  
 &nbsp;&nbsp; |_EWC_hyperparameter:中間層の数や各層のユニット数等のハイパーパラメータの最適な組み合わせを探索するプログラム(ハイパーチューニング)  
 &nbsp;&nbsp; |_EWC_with_GUI:EWCを用いたデフォルトのプログラムをGUIで操作できるようにしたプログラム  
+
+
+# 論文 URL
+[論文説明](https://www.ieice.org/ken/paper/20190723N1Of/)
+
+# 学会　受賞歴
+[SITE学術奨励賞　2019年7月　「破滅的忘却を軽減するニューラルネットワークを用いたスパムフィルタの提案」](https://www.ieice.org/~site/site_award.html)
