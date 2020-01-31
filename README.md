@@ -58,8 +58,6 @@ EWCでは式<img src="https://latex.codecogs.com/gif.latex?\mathcal{L}(\theta)">
 |_03-SpamFilter_by_NeuralNetwork_using_EWC：私の研究に関するプログラム  
 &nbsp;&nbsp; |_doc2vec:doc2vecで生成したベクトルとそのベクトルをt-SNEを用いて二次元の画像にプロットした画像  
 &nbsp;&nbsp; |_EWC:EWCを用いたデフォルトのスパムフィルタのプログラム  
-&nbsp;&nbsp; |_EWC_hyperparameter:中間層の数や各層のユニット数等のハイパーパラメータの最適な組み合わせを探索するプログラム  
-&nbsp;&nbsp; |_EWC_with_GUI:EWCを用いたデフォルトのプログラムをGUIで操作できるようにしたプログラム  
 
 
 # 論文 URL
