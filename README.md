@@ -54,12 +54,18 @@ EWCでは式<img src="https://latex.codecogs.com/gif.latex?\mathcal{L}(\theta)">
  1. 単語の抽出
  <div align="center"><img src="https://user-images.githubusercontent.com/26127488/73605992-97d0e380-45e8-11ea-8f62-87af010dfdde.jpg"></div>
 各メールに記載された本文やメールヘッダから、単語を抽出します。
+<br>
+<br>
+<br>
 
  2. TF/IDFによる事前処理
  <div align="center"><img src="https://user-images.githubusercontent.com/26127488/73605993-97d0e380-45e8-11ea-943a-ad41873a991c.jpg"></div>
 TF/IDFを用いて、スパムメールにも正規のメールにも頻出する単語を削除します。なぜならば、スパムメールにも正規のメールにも頻出する単語は、スパムメールと正規のメールを識別するための情報としては価値が低いと判断したためです。実際に事前処理を行わなかったデータをニューラルネットワークに学習させた場合、識別率は8割程度となりましたが、事前処理を行ったデータをニューラルネットワークに学習させた場合、識別率が9割程度になりました。
 
 また、次の手法で使用するDoc2vecを用いて高次元のベクトルを生成するときに、メールに含まれる単語の数が多いと、ベクトルの生成時間が長くなってしまいます。そのため、この事前処理の段階で単語の数を減らしておくことでベクトルのデータ生成にかかる時間を短縮します。
+<br>
+<br>
+<br>
 
  3. Doc2vecによる分散表現
  <div align="center"><img src="https://user-images.githubusercontent.com/26127488/73605994-97d0e380-45e8-11ea-88b6-5e62c69d0cdd.jpg"></div>
@@ -70,13 +76,18 @@ Doc2vecで得られたベクトルをニューラルネットワークに学習�
 - Doc2vecの参考資料
   - [Doc2vecの原論](https://arxiv.org/abs/1405.4053)
   - [ライブラリgensimを用いたDoc2vecの実装方法](https://radimrehurek.com/gensim/auto_examples/tutorials/run_doc2vec_lee.html#sphx-glr-auto-examples-tutorials-run-doc2vec-lee-py)
+<br>
+<br>
+<br>
 
  4. メールデータセットAを学習(初学習の場合)
  <div align="center"><img src="https://user-images.githubusercontent.com/26127488/73605995-98697a00-45e8-11ea-97d8-3ce6d4788e24.jpg" width="50%" height="50%"></div>
 初学習の場合、収集したメールデータセットAに含まれるa通のメールをDoc2vecを用いてベクトルに変換する。
 上の図では、m1が1つ目のメールのベクトル、m2が二つ目のメールのベクトル、maがa通目のメールのベクトルとなっている。こうして得られたベクトルの内、いくつかのベクトルを学習用データとしてニューラルネットワークで学習し、残りのベクトルをテスト用データとして使用し、識別率を求める。
 このとき、初学習のためEWCを用いずに学習する。(EWCは過去に学習したデータに対する識別率の低下を抑える手法であるため、初学習の場合にはEWCを用いる必要がないため)
-
+<br>
+<br>
+<br>
 
  5. メールデータセットBを追加学習
  <div align="center"><img src="https://user-images.githubusercontent.com/26127488/73605997-98697a00-45e8-11ea-8215-bffb1e44a558.jpg" width="50%" height="50%"></div>
@@ -92,9 +103,12 @@ Doc2vecで得られたベクトルをニューラルネットワークに学習�
  - 各年の正規のメールの内訳：10000通(半分を学習用、残り半分をテスト用として使用)
  - バッチ数:80通(一度に学習するメールの数)
  - Doc2vecによる次元数：300
+<br>
+<br>
 
 <div align="center"><img src="https://github.com/KawaharaSyuichi/spamfilter/blob/master/03-SpamFilter_by_NeuralNetwork_using_EWC/EWC/result/SGD_and_EWC_result.png" alt="実験結果" title="実験結果" width="80%" height="80%"></div>
 <div align="center">図1　英語のメールを一年間隔で追加学習した結果</div>
+<br>
 
 上記の図では、縦軸がメールに対する識別率、横軸が学習回数を示している。  
 なお、識別率は次のように求める。
@@ -118,12 +132,19 @@ Doc2vecで得られたベクトルをニューラルネットワークに学習�
  - 各言語の正規のメールの内訳：2000通(半分を学習用、残り半分をテスト用として使用)
  - バッチ数:80通(一度に学習するメールの数)
  - Doc2vecによる次元数：300
+<br>
+<br>
+<br>
 
 <div align="center"><img src="https://user-images.githubusercontent.com/26127488/73718446-ddfc8300-475f-11ea-9bb4-673ad3e842b1.jpg"></div>
 <div align="center">図2　日本語のメールを学習後に英語のメールを追加学習した結果</div>
+<br>
+<br>
+<br>
 
 <div align="center"><img src="https://user-images.githubusercontent.com/26127488/73718451-e3f26400-475f-11ea-9c68-d6dbbef1d7c7.jpg"></div>
 <div align="center">図3　英語のメールを学習後に日本語のメールを追加学習した結果</div>
+<br>
 
 図2、図3の見方は図1と同じです。  
 図2が日本語のメールを学習した後に、英語のメールを追加学習させた場合の実験結果です。
