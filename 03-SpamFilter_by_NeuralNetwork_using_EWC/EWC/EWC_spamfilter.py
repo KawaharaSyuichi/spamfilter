@@ -12,7 +12,6 @@ from model_for_doc2vec import Model
 from gensim.models import Doc2Vec
 
 train_ephoc = 0
-test_ephoc = 0
 
 
 def random_batch(trainset, batch_size, month_flag, start_idx, train_flag=True):
@@ -70,42 +69,11 @@ def random_batch(trainset, batch_size, month_flag, start_idx, train_flag=True):
     batch.append(docvec)
     batch.append(docflag)
 
-    if return_flag == True and train_flag == True:
+    if return_flag == True:
         train_ephoc += 1
-        if train_ephoc % 100 == 0:
-            print("#" * 50)
-            print("train_ephoc:{}".format(train_ephoc))
-            print("#" * 50)
-    elif return_flag == True and train_flag == False:
-        test_ephoc += 1
-        print("*" * 50)
-        print("test_ephoc:{}".format(test_ephoc))
-        print("*" * 50)
+        print("train_ephoc:{}".format(train_ephoc))
 
     return batch, return_flag
-
-
-def make_last_test_batch(trainset):
-    batch = []
-    docvec = []
-    docflag = []
-
-    idx = [num for num in range(4000, 5000)]
-    idx_1 = [num for num in range(9000, 10000)]
-    idx.extend(idx_1)
-
-    for num in idx:
-        docvec.append(trainset[num])
-
-        if num < 5000:
-            docflag.append([0.0, 1.0])  # spam
-        else:
-            docflag.append([1.0, 0.0])  # ham
-
-    batch.append(docvec)
-    batch.append(docflag)
-
-    return batch
 
 
 def plot_test_acc(plot_handles):
@@ -216,15 +184,6 @@ def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mai
                     test_accs[task][int(
                         iter / disp_freq)] = model.accuracy.eval(feed_dict=feed_dict)
 
-                    last_test_batch = make_last_test_batch(
-                        testsets[task])  # 最後のテストの識別率を計算
-
-                    last_feed_dict = {mail_doc2vec: np.array(
-                        last_test_batch[0]), mail_class: np.array(last_test_batch[1])}
-
-                    last_test_accs[task][int(
-                        iter/disp_freq)] = model.accuracy.eval(feed_dict=last_feed_dict)
-
                     if task == 0:  # 2005 task
                         c = "2005"
                     elif task == 1:  # 2006 task
@@ -233,13 +192,11 @@ def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mai
                         c = "2007"
 
                     if l == 0:
-                        #print("SGD" + " " + c + ":" +str(test_accs[task][int(iter / disp_freq)]))
                         print("last SGD" + " " + c + ":" +
-                              str(last_test_accs[task][int(iter / disp_freq)]))
+                              str(test_accs[task][int(iter / disp_freq)]))
                     else:
-                        #print("EWC" + " " + c + ":" +str(test_accs[task][int(iter / disp_freq)]))
                         print("last EWC" + " " + c + ":" +
-                              str(last_test_accs[task][int(iter / disp_freq)]))
+                              str(test_accs[task][int(iter / disp_freq)]))
 
                     plot_h, = plt.plot(range(
                         1, iter + 2, disp_freq), test_accs[task][:int(iter / disp_freq) + 1], colors[task], label=c)
@@ -301,7 +258,6 @@ print("model.compute_fisher finished")
 # save current optimal weights
 model.star()
 
-test_ephoc = 0
 train_ephoc = 0
 
 print("2005 task finished")
@@ -320,7 +276,6 @@ print("model.compute_fisher finished")
 # save current optimal weights
 model.star()
 
-test_ephoc = 0
 train_ephoc = 0
 
 print("2006 task finished")
