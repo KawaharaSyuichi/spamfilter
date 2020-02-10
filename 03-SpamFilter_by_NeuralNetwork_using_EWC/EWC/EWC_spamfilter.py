@@ -245,7 +245,7 @@ model.compute_fisher(mail_2005_list, sess,
 print("2005 model.compute_fisher finished")
 
 # 重みとバイアスのパラメータ保存
-model.star()
+model.stor()
 
 # エポック数のリセット
 train_ephoc = 0
@@ -262,7 +262,7 @@ model.compute_fisher(mail_2006_list, sess,
                      num_samples=200, plot_diffs=True)
 print("model.compute_fisher finished")
 
-model.star()
+model.stor()
 
 train_ephoc = 0
 

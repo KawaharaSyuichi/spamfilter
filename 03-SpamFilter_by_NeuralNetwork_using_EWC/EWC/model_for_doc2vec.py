@@ -1,55 +1,67 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 import matplotlib.pyplot as plt
-
-from copy import deepcopy  # 完全に新しいデータとしてメモリに生成する
-from IPython import display  # Jupyter notebookで図を表示
+from copy import deepcopy
+from IPython import display
 
 
 def weight_variable(shape):
+    """
+    重みの初期化
+    """
     # shape分の各要素が正規分布かつ標準偏差の2倍までのランダムな値で初期化
     initial = tf.truncated_normal(shape, stddev=0.1)
     return tf.Variable(initial)
 
 
 def bias_variable(shape):
+    """
+    バイアスの初期化
+    """
     initial = tf.constant(0.1, shape=shape)  # shape分の各要素が0.1の行列
     return tf.Variable(initial)
 
 
 class Model:
     def __init__(self, x, y_):
+        """
+        ニューラルネットワークモデルの構築
+        入力層のユニット数：300
+        中間層のユニット数：100
+        出力層のユニット数：2
+        中間層の層数：1
+        使用する活性化関数：ReLU関数
+        使用する損失関数：交差エントロピー損失関数
+        """
 
-        in_dim = 300  # 300 for doc2vec
-        out_dim = 2  # spam or ham
+        in_dim = 300  # doc2vecを用いて得られたベクトルの次元数
+        out_dim = 2  # スパムメールと正規メールの2クラス
 
         self.x = x  # input placeholder (x:[None,300])
 
-        # simple 2-layer network
+        # 入力層と中間層の間のパラメータ
         W1 = weight_variable([in_dim, 100])
         b1 = bias_variable([100])
 
+        # 中間層と出力層の間のパラメータ
         W2 = weight_variable([100, out_dim])
         b2 = bias_variable([out_dim])
 
-        # ReLU関数：活性化関数の一つで、入力した値が0以下のときに0、0より大きい場合はそのままの値を出力する関数。
+        # ReLU関数：活性化関数の一つで、入力した値が0以下のときに0、0より大きい場合はそのままの値を出力する関数
         h1 = tf.nn.relu(tf.matmul(x, W1) + b1)  # hidden layer
         self.y = tf.matmul(h1, W2) + b2  # output layer
 
         self.var_list = [W1, b1, W2, b2]
 
-        # vanilla single-task loss
         # 交差エントロピー損失関数
         self.cross_entropy = tf.reduce_mean(
             tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=self.y))
         self.set_vanilla_loss()
 
-        # performance metrics
         """
          tf.equalはtf.argmax(self.y,1)=[1,2,3],tf.argmax(y_,1)=[2,2,3]とすると
          tf.equalの戻り値は[False,True,True]となる。
         """
-
         correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(y_, 1))
 
         """
@@ -59,9 +71,10 @@ class Model:
         self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     def compute_fisher(self, doc2vec_model, sess, num_samples=200, plot_diffs=False, disp_freq=10):
-        # computer Fisher information for each parameter
+        """
+        フィッシャー情報量の計算
+        """
 
-        # initialize Fisher information for most recent task
         self.F_accum = []
         for v in range(len(self.var_list)):
             self.F_accum.append(
@@ -82,21 +95,18 @@ class Model:
 
         for i in range(num_samples):  # num_samples=200
             # フィッシャー情報行列の計算
-            # 今回フィッシャー情報行列を計算するのはenglish_modelだけ
             im_ind = sum_validation.pop(0)
 
-            # compute first-order derivatives(derivative:導関数)
-            # (訳:一次微分を計算する)
+            # 一次微分を計算する
             # tf.gradientsを実行(sess.run)するうえで、スペースホルダーに該当する部分に、feed_dictで指定した値を使用する。
             ders = sess.run(tf.gradients(tf.log(probs[0, class_ind]), self.var_list), feed_dict={
                             self.x: np.array(doc2vec_model[im_ind]).reshape(1, 300)})
 
-            # square the derivatives and add to total
             for v in range(len(self.F_accum)):
                 # 求めた勾配の二乗を該当するフィッシャー情報行列に加算していく。
                 self.F_accum[v] += np.square(ders[v])
 
-            if (plot_diffs):  # plot処理
+            if (plot_diffs):  # フィッシャー情報量のプロット処理
                 if i % disp_freq == 0 and i > 0:  # disp_freq=10
                     # recording mean diffs of F
                     F_diff = 0
@@ -118,43 +128,53 @@ class Model:
                     display.display(plt.gcf())
                     display.clear_output(wait=True)
 
-        # divide totals by number of samples
         for v in range(len(self.F_accum)):
             self.F_accum[v] /= num_samples  # 平均を求める
 
-        # plt.show()
+        plt.show()
 
-    def star(self):
-        # used for saving optimal weights after most recent task training
+    def stor(self):
+        """
+        パラメータ(重みとバイアス)の保存
+        """
         self.star_vars = []
 
         for v in range(len(self.var_list)):
             self.star_vars.append(self.var_list[v].eval())
 
     def restore(self, sess):
-        # reassign optimal weights for latest task
+        """
+        保存していたパラメータの読み込み
+        """
         if hasattr(self, "star_vars"):
             for v in range(len(self.var_list)):
                 sess.run(self.var_list[v].assign(self.star_vars[v]))
 
     def set_vanilla_loss(self):
+        """
+        Stochastic Gradient Descent(SGD)を用いてパラメータを更新
+        """
         self.train_step = tf.train.GradientDescentOptimizer(
             0.1).minimize(self.cross_entropy)
 
     def update_ewc_loss(self, lam):
         # elastic weight consolidation
         # lam is weighting for previous language_task constraints
+        """
+        Elastic Weight Consolidationを用いてパラメータを更新
+        lam : 一つ前に学習したデータに対する重みづけ(過去のデータをどれだけ考慮するかを決めるパラメータ)
+        """
 
         if not hasattr(self, "ewc_loss"):
             self.ewc_loss = self.cross_entropy
 
-        #self.var_list = [W1, b1, W2, b2]
-        #parameters_fisher = np.zeros((4, 4))
+        # フィッシャー情報量の計算
         for v in range(len(self.var_list)):
             fisher = (lam / 2) * tf.reduce_sum(tf.multiply(self.F_accum[v].astype(
                 np.float32), tf.square(self.var_list[v] - self.star_vars[v])))
 
             self.ewc_loss += fisher
 
+        # フィッシャー情報量を用いてパラメータ更新
         self.train_step = tf.train.GradientDescentOptimizer(
             0.1).minimize(self.ewc_loss)  # 学習率0.1として、ewcで求めた損失関数値を最小にするようにパラメータを学習する。
