@@ -1,0 +1,10 @@
+# ファイルの説明
+ - make_doc2vec_model.py：doc2vecを用いてベクトルを生成するコード
+ 
+ - doc2vec_images_by_t-SNE/japanese_and_english_result：日本語と英語のメールに対してdoc2vecを用いて得られたベクトルをt-SNEを用いて二次元の画像にプロットした結果画像
+
+ - doc2vec_images_by_t-SNE/trec_result：TRECで提供されている英語のメールに対してdoc2vecを用いて得られたベクトルをt-SNEを用いて二次元の画像にプロットした結果画像
+
+ - doc2vec_images_by_t-SNE/t-SNE_doc2vec_english_and_japanese.py：doc2vec_images_by_t-SNE/japanese_and_english_resultの結果を出すためのコード
+
+ - doc2vec_images_by_t-SNE/t-SNE_doc2vec_trec.py：doc2vec_images_by_t-SNE/trec_resultの結果を出すためのコード
