@@ -8,3 +8,7 @@
  - doc2vec_images_by_t-SNE/t-SNE_doc2vec_english_and_japanese.py：doc2vec_images_by_t-SNE/japanese_and_english_resultの結果を出すためのコード
 
  - doc2vec_images_by_t-SNE/t-SNE_doc2vec_trec.py：doc2vec_images_by_t-SNE/trec_resultの結果を出すためのコード
+
+ - sample_hammail.txt：正規メールデータセットの各メールに記述された文章を一つのファイルにまとめる方法を記載
+
+ - sample_spammail.txt：迷惑メールデータセットの各メールに記述された文章を一つのファイルにまとめる方法を記載
