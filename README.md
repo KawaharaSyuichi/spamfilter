@@ -161,11 +161,11 @@ Doc2vecで得られたベクトルをニューラルネットワークに学習�
 # 各フォルダの説明
 ・  
 |  
-|_01-IMAP:メールサーバからメールを受信するためのプログラム  
-|_02-NaiveBayes:ナイーブベイズを用いたスパムフィルタのプログラム  
-|_03-SpamFilter_by_NeuralNetwork_using_EWC：私の研究に関するプログラム  
-&nbsp;&nbsp; |_doc2vec:doc2vecで生成したベクトルとそのベクトルをt-SNEを用いて二次元の画像にプロットした画像  
-&nbsp;&nbsp; |_EWC:EWCを用いたデフォルトのスパムフィルタのプログラム  
+|- 01-IMAP：メールサーバからメールを受信するためのプログラム  
+|- 02-NaiveBayes：ナイーブベイズを用いたスパムフィルタのプログラム  
+|- 03-SpamFilter_by_NeuralNetwork_using_EWC：私の研究に関するプログラム  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |- EWC：EWCを用いたスパムフィルタのプログラム  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |- doc2vec：doc2vecに関するコードやファイル
 
 
 # 論文 URL
