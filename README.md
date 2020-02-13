@@ -167,6 +167,15 @@ Doc2vecで得られたベクトルをニューラルネットワークに学習�
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |- EWC：EWCを用いたスパムフィルタのプログラム  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |- doc2vec：doc2vecに関するコードやファイル
 
+# 環境
+## 動作環境
+ - Anaconda3
+ - Python version：3.6.10
+
+## 主要なライブラリ
+ - gensim version：3.8.1
+ - tensorflow version：1.15.0
+
 
 # 論文 URL
 [論文説明](https://www.ieice.org/ken/paper/20190723N1Of/)
