@@ -1,3 +1,4 @@
+# tensorflow version: 1.14.0
 import sys
 import gensim
 import random
