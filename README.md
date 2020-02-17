@@ -176,6 +176,11 @@ Doc2vecで得られたベクトルをニューラルネットワークに学習�
  - gensim version：3.8.1
  - tensorflow version：1.15.0
 
+# 動作方法
+まず、EWC_spamfilter.pyのあるフォルダに移動。  
+次に、コマンド[python EWC_spamfilter.py]を実行。
+
+![run-program](https://user-images.githubusercontent.com/26127488/74646528-63028600-51bd-11ea-980d-15edb44e430a.gif?raw=true)
 
 # 論文 URL
 [論文説明](https://www.ieice.org/ken/paper/20190723N1Of/)
