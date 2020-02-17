@@ -180,7 +180,7 @@ Doc2vecで得られたベクトルをニューラルネットワークに学習�
 まず、EWC_spamfilter.pyのあるフォルダに移動。  
 次に、コマンド[python EWC_spamfilter.py]を実行。
 
-![run-program](https://user-images.githubusercontent.com/26127488/74646528-63028600-51bd-11ea-980d-15edb44e430a.gif?raw=true)
+![run_program](https://user-images.githubusercontent.com/26127488/74650971-25eec180-51c6-11ea-8dc9-09214c26da8a.gif)
 
 # 論文 URL
 [論文説明](https://www.ieice.org/ken/paper/20190723N1Of/)
