@@ -1,5 +1,6 @@
 # tensorflow version: 1.14.0
 import sys
+import csv
 import gensim
 import random
 import numpy as np
@@ -210,68 +211,70 @@ def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mai
     plt.show()
 
 
-model_path = "/Users/kawahara/Documents/01-programming/00-大学研究/01-MailSearch/trec_doc2vec/trec_year_doc2vec_model/"
+if __name__ == "__main__":
+    model_path = "../doc2vec/doc2vec_models/"
 
-doc2vec_2005 = Doc2Vec.load(model_path + "2005_doc2vec.model")
-mail_2005_list = [doc2vec_2005.docvecs[num]
-                  for num in range(len(doc2vec_2005.docvecs))]
+    # doc2vecを用いて作成した各メールの特徴を300次元のベクトルに変換したデータを読み込む
+    with open(model_path + "2005_doc2vec.csv", "r") as f:
+        reader = csv.reader(f)
+        mail_2005_list = [row for row in reader]
 
-doc2vec_2006 = Doc2Vec.load(model_path + "2006_doc2vec.model")
-mail_2006_list = [doc2vec_2006.docvecs[num]
-                  for num in range(len(doc2vec_2006.docvecs))]
+    with open(model_path + "2006_doc2vec.csv", "r") as f:
+        reader = csv.reader(f)
+        mail_2006_list = [row for row in reader]
 
-doc2vec_2007 = Doc2Vec.load(model_path + "2007_doc2vec.model")
-mail_2007_list = [doc2vec_2007.docvecs[num]
-                  for num in range(len(doc2vec_2007.docvecs))]
+    with open(model_path + "2007_doc2vec.csv", "r") as f:
+        reader = csv.reader(f)
+        mail_2007_list = [row for row in reader]
 
-sess = tf.InteractiveSession()
+    sess = tf.InteractiveSession()
 
-mail_doc2vec = tf.placeholder(tf.float32, shape=[None, 300])
-mail_class = tf.placeholder(
-    tf.float32, shape=[None, 2])  # ラベルの種類　ham:[1,0],spam:[0,1]
+    mail_doc2vec = tf.placeholder(tf.float32, shape=[None, 300])
+    mail_class = tf.placeholder(
+        tf.float32, shape=[None, 2])  # ラベルの種類　ham:[1,0],spam:[0,1]
 
-# ニューラルネットワークモデルの構築(モデルの具体的な構成はmodel_for_doc2vec.pyを参照)
-model = Model(mail_doc2vec, mail_class)
+    # ニューラルネットワークモデルの構築(モデルの具体的な構成はmodel_for_doc2vec.pyを参照)
+    model = Model(mail_doc2vec, mail_class)
 
-sess.run(tf.global_variables_initializer())
+    sess.run(tf.global_variables_initializer())
 
-# 2005年メールデータセットの学習
-train_task(model, 1020, 20, mail_2005_list, [
-           mail_2005_list], mail_doc2vec, mail_class, lams=[0])
-print('2005 train finished')
+    # 2005年メールデータセットの学習
+    train_task(model, 1020, 20, mail_2005_list, [
+               mail_2005_list], mail_doc2vec, mail_class, lams=[0])
+    print('2005 train finished')
 
-# 2005年分のフィッシャー情報量の計算
-model.compute_fisher(mail_2005_list, sess,
-                     num_samples=200, plot_diffs=True)
-print("2005 model.compute_fisher finished")
+    # 2005年分のフィッシャー情報量の計算
+    model.compute_fisher(mail_2005_list, sess,
+                         num_samples=200, plot_diffs=True)
+    print("2005 model.compute_fisher finished")
 
-# 重みとバイアスのパラメータ保存
-model.stor()
+    # 重みとバイアスのパラメータ保存
+    model.stor()
 
-# エポック数のリセット
-train_ephoc = 0
+    # エポック数のリセット
+    train_ephoc = 0
 
-print("2005 task finished")
+    print("2005 task finished")
 
-# 2006年メールデータセットの追加学習
-# 最後の引数lams=[0,100]のうち、二つ目の値(100)はEWCを用いるときに使用するパラメータλ(詳しい説明はREADME.mdを参照)
-train_task(model, 1020, 20, mail_2006_list, [
-           mail_2005_list, mail_2006_list], mail_doc2vec, mail_class, lams=[0, 100])
+    # 2006年メールデータセットの追加学習
+    # 最後の引数lams=[0,100]のうち、二つ目の値(100)はEWCを用いるときに使用するパラメータλ(詳しい説明はREADME.mdを参照)
+    train_task(model, 1020, 20, mail_2006_list, [
+               mail_2005_list, mail_2006_list], mail_doc2vec, mail_class, lams=[0, 100])
 
-# 2006年分のフィッシャー情報量の計算
-model.compute_fisher(mail_2006_list, sess,
-                     num_samples=200, plot_diffs=True)
-print("model.compute_fisher finished")
+    # 2006年分のフィッシャー情報量の計算
+    model.compute_fisher(mail_2006_list, sess,
+                         num_samples=200, plot_diffs=True)
+    print("model.compute_fisher finished")
 
-model.stor()
+    model.stor()
 
-train_ephoc = 0
+    train_ephoc = 0
 
-print("2006 task finished")
+    print("2006 task finished")
 
-# 2007年メールデータセットの追加学習
-# 追加学習する最後のデータセットのため、フィッシャー情報量の計算はしない
-train_task(model, 1020, 20, mail_2007_list, [
-           mail_2005_list, mail_2006_list, mail_2007_list], mail_doc2vec, mail_class, lams=[0, 100])
+    # 2007年メールデータセットの追加学習
+    # 追加学習する最後のデータセットのため、フィッシャー情報量の計算はしない
+    train_task(model, 1020, 20, mail_2007_list, [
+               mail_2005_list, mail_2006_list, mail_2007_list], mail_doc2vec, mail_class, lams=[0, 100])
 
-print("2007 task finished")
+    print("2007 task finished")
