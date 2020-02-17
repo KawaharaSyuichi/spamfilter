@@ -1,5 +1,7 @@
 # ファイルの説明
  - make_doc2vec_model.py：doc2vecを用いてベクトルを生成するコード
+
+ - doc2vec_models：doc2vecを用いて作成した各メールの特徴量を300次元のベクトルに変換したデータセット
  
  - doc2vec_images_by_t-SNE/japanese_and_english_result：日本語と英語のメールに対してdoc2vecを用いて得られたベクトルをt-SNEを用いて二次元の画像にプロットした結果画像
 
