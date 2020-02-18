@@ -10,8 +10,6 @@ from IPython import display
 from gensim.models import Doc2Vec
 from model_for_doc2vec import Model
 
-train_ephoc = 0
-
 
 def random_batch(trainset, batch_size, start_idx):
     """
@@ -19,7 +17,6 @@ def random_batch(trainset, batch_size, start_idx):
     """
     half_batch_size = int(batch_size / 2)
     return_flag = False
-    global train_ephoc
 
     batch = []
     docvec = []
@@ -65,10 +62,6 @@ def random_batch(trainset, batch_size, start_idx):
 
     batch.append(docvec)
     batch.append(docflag)
-
-    if return_flag == True:
-        train_ephoc += 1
-        print("train_ephoc:{}".format(train_ephoc))
 
     return batch, return_flag
 
@@ -117,6 +110,7 @@ def plot_test_acc(plot_handles):
 
 def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mail_class, lams=[0]):
     train_start_idx = 0
+    train_ephoc = 0
 
     for l in range(len(lams)):
         first_flag = False
@@ -143,6 +137,8 @@ def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mai
                     train_start_idx += 1
                 elif return_flag == True:
                     train_start_idx = 0
+                    train_ephoc += 1
+                    print("train ephoc is {}".format(train_ephoc))
 
                 # 学習開始
                 model.train_step.run(feed_dict={mail_doc2vec: np.array(
@@ -158,6 +154,8 @@ def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mai
                     train_start_idx += 1
                 elif return_flag == True:
                     train_start_idx = 0
+                    train_ephoc += 1
+                    print("train ephoc is {}".format(train_ephoc))
 
                 # 学習開始
                 model.train_step.run(feed_dict={mail_doc2vec: np.array(
@@ -251,9 +249,6 @@ if __name__ == "__main__":
     # 重みとバイアスのパラメータ保存
     model.stor()
 
-    # エポック数のリセット
-    train_ephoc = 0
-
     print("2005 task finished")
 
     # 2006年メールデータセットの追加学習
@@ -267,8 +262,6 @@ if __name__ == "__main__":
     print("model.compute_fisher finished")
 
     model.stor()
-
-    train_ephoc = 0
 
     print("2006 task finished")
 
