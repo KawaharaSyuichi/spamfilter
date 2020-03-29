@@ -58,16 +58,8 @@ class Model:
             tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=self.y))
         self.set_vanilla_loss()
 
-        """
-         tf.equalはtf.argmax(self.y,1)=[1,2,3],tf.argmax(y_,1)=[2,2,3]とすると
-         tf.equalの戻り値は[False,True,True]となる。
-        """
         correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(y_, 1))
 
-        """
-         tf.castは,correct_predictionの各要素[False,Ture,Ture]を二つ目の式数の型に変換する[0.,1.,1.,]
-         tf.reduce_meanは平均を計算する。[0.,1.,1.]の場合、2/3=0.666667のように計算される。
-        """
         self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     def compute_fisher(self, doc2vec_model, sess, num_samples=200, plot_diffs=False, disp_freq=10):

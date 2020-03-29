@@ -1,4 +1,3 @@
-# tensorflow version: 1.14.0
 import sys
 import csv
 import gensim
@@ -9,6 +8,20 @@ import matplotlib.pyplot as plt
 from IPython import display
 from gensim.models import Doc2Vec
 from model_for_doc2vec import Model
+
+
+class parameter:
+    """
+    ニューラルネットワークで使用するパラメータ
+    """
+
+    def __init__(self):
+        self.ITERATIONS = 1020
+        self.DISP_FREQ = 20
+        self.lams = [0]
+
+    def set_lams(self, lams_value):
+        self.lams.append(lams_value)
 
 
 def random_batch(trainset, batch_size, start_idx):
@@ -27,6 +40,7 @@ def random_batch(trainset, batch_size, start_idx):
     spam_half_end = 100 + (start_idx + 1) * half_batch_size
     ham_half_start = 5100 + start_idx * half_batch_size
     ham_half_end = 5100 + (start_idx + 1) * half_batch_size
+
     if spam_half_end > 2500:  # 学習用データセットを一通り学習した場合(エポック数が1増える)
         idx = [num for num in range(spam_half_start, 2500)]
         idx.extend(random.sample(range(100, spam_half_start),
@@ -108,7 +122,10 @@ def plot_test_acc(plot_handles):
     display.clear_output(wait=True)
 
 
-def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mail_class, lams=[0]):
+def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, mail_doc2vec, mail_class, sess, lams):
+    """
+    学習と識別の実行
+    """
     train_start_idx = 0
     train_ephoc = 0
 
@@ -166,7 +183,6 @@ def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mai
                 plt.subplot(1, len(lams), l + 1)
 
                 plots = []
-                colors = ['r', 'b', 'c']
 
                 for task in range(len(testsets)):
                     test_batch = make_test_batch(testsets[task])
@@ -178,22 +194,18 @@ def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mai
                     test_accs[task][int(
                         iter / disp_freq)] = model.accuracy.eval(feed_dict=feed_dict)
 
-                    if task == 0:  # 2005 task
-                        c = "2005"
-                    elif task == 1:  # 2006 task
-                        c = "2006"
-                    elif task == 2:  # 2007 task
-                        c = "2007"
+                    usage_guide = doc2vec_labels[task]
 
+                    # 1回学習するごとに識別率を表示
                     if l == 0:
-                        print("last SGD" + " " + c + ":" +
+                        print("SGD" + " " + usage_guide + ":" +
                               str(test_accs[task][int(iter / disp_freq)]))
                     else:
-                        print("last EWC" + " " + c + ":" +
+                        print("EWC" + " " + usage_guide + ":" +
                               str(test_accs[task][int(iter / disp_freq)]))
 
                     plot_h, = plt.plot(range(
-                        1, iter + 2, disp_freq), test_accs[task][:int(iter / disp_freq) + 1], colors[task], label=c)
+                        1, iter + 2, disp_freq), test_accs[task][:int(iter / disp_freq) + 1], label=usage_guide)
 
                     plots.append(plot_h)
 
@@ -209,65 +221,45 @@ def train_task(model, num_iter, disp_freq, trainset, testsets, mail_doc2vec, mai
     plt.show()
 
 
-if __name__ == "__main__":
-    model_path = "../doc2vec/doc2vec_models/"
+def main(model_info_orderdict):
+    """
+    read_doc2vec.pyにより実行される関数
+    """
+    model_doc2vec_dict = dict()
+    model_doc2vec_learned_list = []
+    doc2vec_labels_list = []
 
-    # doc2vecを用いて作成した各メールの特徴を300次元のベクトルに変換したデータを読み込む
-    with open(model_path + "2005_doc2vec.csv", "r") as f:
-        reader = csv.reader(f)
-        mail_2005_list = [row for row in reader]
+    PARAMETERS = parameter()
 
-    with open(model_path + "2006_doc2vec.csv", "r") as f:
-        reader = csv.reader(f)
-        mail_2006_list = [row for row in reader]
-
-    with open(model_path + "2007_doc2vec.csv", "r") as f:
-        reader = csv.reader(f)
-        mail_2007_list = [row for row in reader]
+    for doc2vec_label, file_path in model_info_orderdict.items():
+        with open(file_path, "r") as f:
+            reader = csv.reader(f)
+            model_doc2vec_dict[doc2vec_label] = [row for row in reader]
 
     sess = tf.InteractiveSession()
 
     mail_doc2vec = tf.placeholder(tf.float32, shape=[None, 300])
     mail_class = tf.placeholder(
-        tf.float32, shape=[None, 2])  # ラベルの種類　ham:[1,0],spam:[0,1]
+        tf.float32, shape=[None, 2])  # 教師ラベルの種類　ham:[1,0],spam:[0,1]
 
     # ニューラルネットワークモデルの構築(モデルの具体的な構成はmodel_for_doc2vec.pyを参照)
     model = Model(mail_doc2vec, mail_class)
 
     sess.run(tf.global_variables_initializer())
 
-    # 2005年メールデータセットの学習
-    train_task(model, 1020, 20, mail_2005_list, [
-               mail_2005_list], mail_doc2vec, mail_class, lams=[0])
-    print('2005 train finished')
+    for doc2vec_label in model_info_orderdict.keys():
+        doc2vec_labels_list.append(doc2vec_label)
+        model_doc2vec_learned_list.append(model_doc2vec_dict[doc2vec_label])
 
-    # 2005年分のフィッシャー情報量の計算
-    model.compute_fisher(mail_2005_list, sess,
-                         num_samples=200, plot_diffs=True)
-    print("2005 model.compute_fisher finished")
+        train_task(model, PARAMETERS.ITERATIONS, PARAMETERS.DISP_FREQ,
+                   model_doc2vec_dict[doc2vec_label], doc2vec_labels_list, model_doc2vec_learned_list, mail_doc2vec, mail_class, sess, PARAMETERS.lams)
 
-    # 重みとバイアスのパラメータ保存
-    model.stor()
+        # 各ラベルのフィッシャー情報量の計算
+        model.compute_fisher(model_doc2vec_dict[doc2vec_label], sess,
+                             num_samples=200, plot_diffs=True)
 
-    print("2005 task finished")
+        # 重みとバイアスのパラメータ保存
+        model.stor()
 
-    # 2006年メールデータセットの追加学習
-    # 最後の引数lams=[0,100]のうち、二つ目の値(100)はEWCを用いるときに使用するパラメータλ(詳しい説明はREADME.mdを参照)
-    train_task(model, 1020, 20, mail_2006_list, [
-               mail_2005_list, mail_2006_list], mail_doc2vec, mail_class, lams=[0, 100])
-
-    # 2006年分のフィッシャー情報量の計算
-    model.compute_fisher(mail_2006_list, sess,
-                         num_samples=200, plot_diffs=True)
-    print("model.compute_fisher finished")
-
-    model.stor()
-
-    print("2006 task finished")
-
-    # 2007年メールデータセットの追加学習
-    # 追加学習する最後のデータセットのため、フィッシャー情報量の計算はしない
-    train_task(model, 1020, 20, mail_2007_list, [
-               mail_2005_list, mail_2006_list, mail_2007_list], mail_doc2vec, mail_class, lams=[0, 100])
-
-    print("2007 task finished")
+        if len(PARAMETERS.lams) == 1:
+            PARAMETERS.set_lams(100)
