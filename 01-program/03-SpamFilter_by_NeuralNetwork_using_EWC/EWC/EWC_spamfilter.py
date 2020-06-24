@@ -16,7 +16,7 @@ class parameter:
     """
 
     def __init__(self):
-        self.ITERATIONS = 1020
+        self.ITERATIONS = 520
         self.DISP_FREQ = 20
         self.lams = [0]
 
@@ -38,8 +38,53 @@ def random_batch(trainset, batch_size, start_idx):
 
     spam_half_start = 100 + start_idx * half_batch_size
     spam_half_end = 100 + (start_idx + 1) * half_batch_size
+    ham_half_start = 2100 + start_idx * half_batch_size
+    ham_half_end = 2100 + (start_idx + 1) * half_batch_size
+
+    if spam_half_end > 1000:  # 学習用データセットを一通り学習した場合(エポック数が1増える)
+        idx = [num for num in range(spam_half_start, 1000)]
+        idx.extend(random.sample(range(100, spam_half_start),
+                                 k=half_batch_size - len(idx)))
+        idx_1 = [num for num in range(ham_half_start, 3000)]
+        idx_1.extend(random.sample(range(2100, ham_half_start),
+                                   k=half_batch_size - len(idx_1)))
+
+        # 学習用データセットをシャッフル
+        spam_half = trainset[100:1000]
+        ham_half = trainset[2100:3000]
+        random.shuffle(spam_half)
+        random.shuffle(ham_half)
+        trainset[100:1000] = spam_half
+        trainset[2100:3000] = ham_half
+
+        return_flag = True
+    else:
+        idx = [num for num in range(spam_half_start, spam_half_end)]
+        random.shuffle(idx)
+        idx_1 = [num for num in range(ham_half_start, ham_half_end)]
+        random.shuffle(idx_1)
+    idx.extend(idx_1)
+
+    for num in idx:
+        docvec.append(trainset[num])
+
+        # ラベル作成
+        if num < 2000:
+            docflag.append([0.0, 1.0])  # spam
+        else:
+            docflag.append([1.0, 0.0])  # ham
+
+    batch.append(docvec)
+    batch.append(docflag)
+
+    return batch, return_flag
+
+    """
+    spam_half_start = 100 + start_idx * half_batch_size
+    spam_half_end = 100 + (start_idx + 1) * half_batch_size
     ham_half_start = 5100 + start_idx * half_batch_size
     ham_half_end = 5100 + (start_idx + 1) * half_batch_size
+    
 
     if spam_half_end > 2500:  # 学習用データセットを一通り学習した場合(エポック数が1増える)
         idx = [num for num in range(spam_half_start, 2500)]
@@ -78,6 +123,7 @@ def random_batch(trainset, batch_size, start_idx):
     batch.append(docflag)
 
     return batch, return_flag
+    """
 
 
 def make_test_batch(trainset):
@@ -88,6 +134,25 @@ def make_test_batch(trainset):
     docvec = []
     docflag = []
 
+    # テスト用バッチでは学習用で用いなかった残りのデータを全て使用する
+    idx = [num for num in range(1000, 2000)]  # スパムメール分
+    idx_1 = [num for num in range(3000, 4000)]  # 正規メール分
+    idx.extend(idx_1)
+
+    for num in idx:
+        docvec.append(trainset[num])
+
+        if num < 2000:
+            docflag.append([0.0, 1.0])  # spam
+        else:
+            docflag.append([1.0, 0.0])  # ham
+
+    batch.append(docvec)
+    batch.append(docflag)
+
+    return batch
+
+    """
     # テスト用バッチでは学習用で用いなかった残りのデータを全て使用する
     idx = [num for num in range(2500, 5000)]  # スパムメール分
     idx_1 = [num for num in range(7500, 10000)]  # 正規メール分
@@ -105,6 +170,7 @@ def make_test_batch(trainset):
     batch.append(docflag)
 
     return batch
+    """
 
 
 def plot_test_acc(plot_handles):
@@ -115,7 +181,7 @@ def plot_test_acc(plot_handles):
     plt.xlabel("Iterations")
     plt.ylabel("Test Accuracy")
     plt.yticks(np.arange(0.0, 1.1, 0.1))
-    plt.xticks(np.arange(0, 1020, 50))
+    plt.xticks(np.arange(0, 520, 50))
     plt.ylim(0.0, 1.01)
     plt.grid(which='major', color='black', linestyle='-')
     display.display(plt.gcf())
