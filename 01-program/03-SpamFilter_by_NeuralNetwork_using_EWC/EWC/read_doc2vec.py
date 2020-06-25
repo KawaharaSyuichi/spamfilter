@@ -1,13 +1,14 @@
 import sys
 import tkinter as tk
 import EWC_spamfilter as EWC
+import EWC_spamfilter_with_MVG as EWC_MVG
 from tkinter import filedialog
 from tkinter import ttk
 from collections import OrderedDict
 
 
 class Application(tk.Frame):
-    def __init__(self, master=None):
+    def __init__(self, args, master=None):
         """
         初期設定
         """
@@ -17,6 +18,12 @@ class Application(tk.Frame):
         self.model_info_orderdict = OrderedDict()
         self.combobox_list = []
         self.combobox = ttk.Combobox(self.master, values=self.combobox_list)
+
+        if args[1] == "mvg":
+            self.mvg_flag = True
+        else:
+            self.mvg_flag = False
+
         self.create_window()
 
     def input_file_path(self):
@@ -53,7 +60,10 @@ class Application(tk.Frame):
         """
         EWC_spamfilter.pyを実行
         """
-        EWC.main(self.model_info_orderdict)
+        if self.mvg_flag == False:
+            EWC.main(self.model_info_orderdict)
+        else:
+            EWC_MVG.main(self.model_info_orderdict)
 
     def create_window(self):
         """
@@ -77,6 +87,8 @@ class Application(tk.Frame):
 
 
 if __name__ == "__main__":
+    args = sys.argv
+
     root = tk.Tk()
-    app = Application(master=root)
+    app = Application(master=root, args=args)
     app.mainloop()
