@@ -132,6 +132,8 @@ def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, m
 
     train_start_idx = 0
     train_ephoc = 0
+    mvg_train_start_idx = 0
+    mvg_train_ephoc = 0
 
     for l in range(len(lams)):
         first_flag = False
@@ -150,37 +152,87 @@ def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, m
 
         # num_iter回学習を行う
         for iter in range(num_iter):
-            if len(lams) == 2 and first_flag == True:  # 初の学習を行う場合
-                train_batch, return_flag = random_batch(
-                    trainset, 100, train_start_idx)
+            # 初学習の場合と学習回数が20回以上の場合は新しい学習データでのみ学習
+            if iter > 20 or len(testsets) == 1:
+                if len(lams) == 2 and first_flag == True:  # 初の学習を行う場合
+                    train_batch, return_flag = random_batch(
+                        trainset, 100, train_start_idx)
+
+                    if return_flag == False:
+                        train_start_idx += 1
+                    elif return_flag == True:
+                        train_start_idx = 0
+                        train_ephoc += 1
+                        print("train ephoc is {}".format(train_ephoc))
+
+                    # 学習開始
+                    model.train_step.run(feed_dict={mail_doc2vec: np.array(
+                        train_batch[0]), mail_class: np.array(train_batch[1])})
+
+                elif len(lams) == 2 and first_flag == False:
+                    first_flag = True
+                elif len(lams) == 1:
+                    train_batch, return_flag = random_batch(
+                        trainset, 100, train_start_idx)
+
+                    if return_flag == False:
+                        train_start_idx += 1
+                    elif return_flag == True:
+                        train_start_idx = 0
+                        train_ephoc += 1
+                        print("train ephoc is {}".format(train_ephoc))
+
+                    # 学習開始
+                    model.train_step.run(feed_dict={mail_doc2vec: np.array(
+                        train_batch[0]), mail_class: np.array(train_batch[1])})
+
+            elif iter % 2 == 0:  # 学習回数が20回未満、かつ学習回数が偶数回の場合
+                if len(lams) == 2 and first_flag == True:  # 初の学習を行う場合
+                    train_batch, return_flag = random_batch(
+                        trainset, 100, train_start_idx)
+
+                    if return_flag == False:
+                        train_start_idx += 1
+                    elif return_flag == True:
+                        train_start_idx = 0
+                        train_ephoc += 1
+                        print("train ephoc is {}".format(train_ephoc))
+
+                    # 学習開始
+                    model.train_step.run(feed_dict={mail_doc2vec: np.array(
+                        train_batch[0]), mail_class: np.array(train_batch[1])})
+
+                elif len(lams) == 2 and first_flag == False:
+                    first_flag = True
+                elif len(lams) == 1:
+                    train_batch, return_flag = random_batch(
+                        trainset, 100, train_start_idx)
+
+                    if return_flag == False:
+                        train_start_idx += 1
+                    elif return_flag == True:
+                        train_start_idx = 0
+                        train_ephoc += 1
+                        print("train ephoc is {}".format(train_ephoc))
+
+                    # 学習開始
+                    model.train_step.run(feed_dict={mail_doc2vec: np.array(
+                        train_batch[0]), mail_class: np.array(train_batch[1])})
+
+            else:  # 学習回数が20回未満、かつ学習回数が奇数回の場合(つまりMVG)
+                mvg_train_batch, return_flag = random_batch(
+                    testsets[len(testsets)-1], 100, mvg_train_start_idx)
 
                 if return_flag == False:
-                    train_start_idx += 1
+                    mvg_train_start_idx += 1
                 elif return_flag == True:
-                    train_start_idx = 0
-                    train_ephoc += 1
-                    print("train ephoc is {}".format(train_ephoc))
+                    mvg_train_start_idx = 0
+                    mvg_train_ephoc += 1
+                    print("train ephoc is {}".format(mvg_train_ephoc))
 
                 # 学習開始
                 model.train_step.run(feed_dict={mail_doc2vec: np.array(
-                    train_batch[0]), mail_class: np.array(train_batch[1])})
-
-            elif len(lams) == 2 and first_flag == False:
-                first_flag = True
-            elif len(lams) == 1:
-                train_batch, return_flag = random_batch(
-                    trainset, 100, train_start_idx)
-
-                if return_flag == False:
-                    train_start_idx += 1
-                elif return_flag == True:
-                    train_start_idx = 0
-                    train_ephoc += 1
-                    print("train ephoc is {}".format(train_ephoc))
-
-                # 学習開始
-                model.train_step.run(feed_dict={mail_doc2vec: np.array(
-                    train_batch[0]), mail_class: np.array(train_batch[1])})
+                    mvg_train_batch[0]), mail_class: np.array(mvg_train_batch[1])})
 
             # disp_freq(=20)回学習するごとに、テスト用メールに対する識別率を求める
             if iter % disp_freq == 0:
