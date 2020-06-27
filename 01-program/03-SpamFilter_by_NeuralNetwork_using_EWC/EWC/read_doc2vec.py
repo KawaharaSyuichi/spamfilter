@@ -89,6 +89,9 @@ class Application(tk.Frame):
 if __name__ == "__main__":
     args = sys.argv
 
+    if len(args) == 1:
+        sys.exit("In case of using MVG, input mvg")
+
     root = tk.Tk()
     app = Application(master=root, args=args)
     app.mainloop()

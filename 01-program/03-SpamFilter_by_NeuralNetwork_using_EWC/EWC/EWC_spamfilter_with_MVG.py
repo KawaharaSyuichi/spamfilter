@@ -39,24 +39,24 @@ def random_batch(trainset, batch_size, start_idx):
 
     spam_half_start = 100 + start_idx * half_batch_size
     spam_half_end = 100 + (start_idx + 1) * half_batch_size
-    ham_half_start = 2100 + start_idx * half_batch_size
-    ham_half_end = 2100 + (start_idx + 1) * half_batch_size
+    ham_half_start = 1100 + start_idx * half_batch_size
+    ham_half_end = 1100 + (start_idx + 1) * half_batch_size
 
-    if spam_half_end > 1000:  # 学習用データセットを一通り学習した場合(エポック数が1増える)
-        idx = [num for num in range(spam_half_start, 1000)]
+    if spam_half_end > 500:  # 学習用データセットを一通り学習した場合(エポック数が1増える)
+        idx = [num for num in range(spam_half_start, 500)]
         idx.extend(random.sample(range(100, spam_half_start),
                                  k=half_batch_size - len(idx)))
-        idx_1 = [num for num in range(ham_half_start, 3000)]
-        idx_1.extend(random.sample(range(2100, ham_half_start),
+        idx_1 = [num for num in range(ham_half_start, 1500)]
+        idx_1.extend(random.sample(range(1100, ham_half_start),
                                    k=half_batch_size - len(idx_1)))
 
         # 学習用データセットをシャッフル
-        spam_half = trainset[100:1000]
-        ham_half = trainset[2100:3000]
+        spam_half = trainset[100:500]
+        ham_half = trainset[1100:1500]
         random.shuffle(spam_half)
         random.shuffle(ham_half)
-        trainset[100:1000] = spam_half
-        trainset[2100:3000] = ham_half
+        trainset[100:500] = spam_half
+        trainset[1100:1500] = ham_half
 
         return_flag = True
     else:
@@ -70,7 +70,7 @@ def random_batch(trainset, batch_size, start_idx):
         docvec.append(trainset[num])
 
         # ラベル作成
-        if num < 2000:
+        if num < 1000:
             docflag.append([0.0, 1.0])  # spam
         else:
             docflag.append([1.0, 0.0])  # ham
@@ -91,14 +91,14 @@ def make_test_batch(trainset):
     docflag = []
 
     # テスト用バッチでは学習用で用いなかった残りのデータを全て使用する
-    idx = [num for num in range(1000, 2000)]  # スパムメール分
-    idx_1 = [num for num in range(3000, 4000)]  # 正規メール分
+    idx = [num for num in range(500, 1000)]  # スパムメール分
+    idx_1 = [num for num in range(1500, 2000)]  # 正規メール分
     idx.extend(idx_1)
 
     for num in idx:
         docvec.append(trainset[num])
 
-        if num < 2000:
+        if num < 1000:
             docflag.append([0.0, 1.0])  # spam
         else:
             docflag.append([1.0, 0.0])  # ham
@@ -156,7 +156,7 @@ def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, m
             if iter > 20 or len(testsets) == 1:
                 if len(lams) == 2 and first_flag == True:  # 初の学習を行う場合
                     train_batch, return_flag = random_batch(
-                        trainset, 100, train_start_idx)
+                        trainset, 32, train_start_idx)
 
                     if return_flag == False:
                         train_start_idx += 1
@@ -173,7 +173,7 @@ def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, m
                     first_flag = True
                 elif len(lams) == 1:
                     train_batch, return_flag = random_batch(
-                        trainset, 100, train_start_idx)
+                        trainset, 32, train_start_idx)
 
                     if return_flag == False:
                         train_start_idx += 1
@@ -189,7 +189,7 @@ def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, m
             elif iter % 2 == 0:  # 学習回数が20回未満、かつ学習回数が偶数回の場合
                 if len(lams) == 2 and first_flag == True:  # 初の学習を行う場合
                     train_batch, return_flag = random_batch(
-                        trainset, 100, train_start_idx)
+                        trainset, 32, train_start_idx)
 
                     if return_flag == False:
                         train_start_idx += 1
@@ -206,7 +206,7 @@ def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, m
                     first_flag = True
                 elif len(lams) == 1:
                     train_batch, return_flag = random_batch(
-                        trainset, 100, train_start_idx)
+                        trainset, 32, train_start_idx)
 
                     if return_flag == False:
                         train_start_idx += 1
@@ -221,14 +221,14 @@ def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, m
 
             else:  # 学習回数が20回未満、かつ学習回数が奇数回の場合(つまりMVG)
                 mvg_train_batch, return_flag = random_batch(
-                    testsets[len(testsets)-1], 100, mvg_train_start_idx)
+                    testsets[len(testsets)-1], 32, mvg_train_start_idx)
 
                 if return_flag == False:
                     mvg_train_start_idx += 1
                 elif return_flag == True:
                     mvg_train_start_idx = 0
                     mvg_train_ephoc += 1
-                    print("train ephoc is {}".format(mvg_train_ephoc))
+                    print("mvg train ephoc is {}".format(mvg_train_ephoc))
 
                 # 学習開始
                 model.train_step.run(feed_dict={mail_doc2vec: np.array(
