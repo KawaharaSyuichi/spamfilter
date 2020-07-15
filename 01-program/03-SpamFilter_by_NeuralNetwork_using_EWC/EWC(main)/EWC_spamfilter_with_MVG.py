@@ -319,4 +319,4 @@ def main(model_info_orderdict):
         model.stor()
 
         if len(PARAMETERS.lams) == 1:
-            PARAMETERS.set_lams(100)
+            PARAMETERS.set_lams(50)
