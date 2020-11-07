@@ -90,7 +90,8 @@ if __name__ == "__main__":
     args = sys.argv
 
     if len(args) == 1:
-        sys.exit("In case of using MVG, input mvg")
+        sys.exit(
+            "In case of using MVG, input mvg.\nIn case of not using MVG, input othre string")
 
     root = tk.Tk()
     app = Application(master=root, args=args)

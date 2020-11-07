@@ -7,7 +7,8 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from IPython import display
 from gensim.models import Doc2Vec
-from model_for_doc2vec import Model
+#from model_for_doc2vec import Model
+from model_for_bert import Model
 
 
 class parameter:
@@ -38,24 +39,24 @@ def random_batch(trainset, batch_size, start_idx):
 
     spam_half_start = 100 + start_idx * half_batch_size
     spam_half_end = 100 + (start_idx + 1) * half_batch_size
-    ham_half_start = 2100 + start_idx * half_batch_size
-    ham_half_end = 2100 + (start_idx + 1) * half_batch_size
+    ham_half_start = 1100 + start_idx * half_batch_size
+    ham_half_end = 1100 + (start_idx + 1) * half_batch_size
 
-    if spam_half_end > 1000:  # 学習用データセットを一通り学習した場合(エポック数が1増える)
-        idx = [num for num in range(spam_half_start, 1000)]
+    if spam_half_end > 500:  # 学習用データセットを一通り学習した場合(エポック数が1増える)
+        idx = [num for num in range(spam_half_start, 500)]
         idx.extend(random.sample(range(100, spam_half_start),
                                  k=half_batch_size - len(idx)))
-        idx_1 = [num for num in range(ham_half_start, 3000)]
-        idx_1.extend(random.sample(range(2100, ham_half_start),
+        idx_1 = [num for num in range(ham_half_start, 1500)]
+        idx_1.extend(random.sample(range(1100, ham_half_start),
                                    k=half_batch_size - len(idx_1)))
 
         # 学習用データセットをシャッフル
-        spam_half = trainset[100:1000]
-        ham_half = trainset[2100:3000]
+        spam_half = trainset[100:500]
+        ham_half = trainset[1100:1500]
         random.shuffle(spam_half)
         random.shuffle(ham_half)
-        trainset[100:1000] = spam_half
-        trainset[2100:3000] = ham_half
+        trainset[100:500] = spam_half
+        trainset[1100:1500] = ham_half
 
         return_flag = True
     else:
@@ -69,7 +70,7 @@ def random_batch(trainset, batch_size, start_idx):
         docvec.append(trainset[num])
 
         # ラベル作成
-        if num < 2000:
+        if num < 1000:
             docflag.append([0.0, 1.0])  # spam
         else:
             docflag.append([1.0, 0.0])  # ham
@@ -78,52 +79,6 @@ def random_batch(trainset, batch_size, start_idx):
     batch.append(docflag)
 
     return batch, return_flag
-
-    """
-    spam_half_start = 100 + start_idx * half_batch_size
-    spam_half_end = 100 + (start_idx + 1) * half_batch_size
-    ham_half_start = 5100 + start_idx * half_batch_size
-    ham_half_end = 5100 + (start_idx + 1) * half_batch_size
-    
-
-    if spam_half_end > 2500:  # 学習用データセットを一通り学習した場合(エポック数が1増える)
-        idx = [num for num in range(spam_half_start, 2500)]
-        idx.extend(random.sample(range(100, spam_half_start),
-                                 k=half_batch_size - len(idx)))
-        idx_1 = [num for num in range(ham_half_start, 7500)]
-        idx_1.extend(random.sample(range(5100, ham_half_start),
-                                   k=half_batch_size - len(idx_1)))
-
-        # 学習用データセットをシャッフル
-        spam_half = trainset[100:2500]
-        ham_half = trainset[5100:7500]
-        random.shuffle(spam_half)
-        random.shuffle(ham_half)
-        trainset[100:2500] = spam_half
-        trainset[5100:7500] = ham_half
-
-        return_flag = True
-    else:
-        idx = [num for num in range(spam_half_start, spam_half_end)]
-        random.shuffle(idx)
-        idx_1 = [num for num in range(ham_half_start, ham_half_end)]
-        random.shuffle(idx_1)
-    idx.extend(idx_1)
-
-    for num in idx:
-        docvec.append(trainset[num])
-
-        # ラベル作成
-        if num < 5000:
-            docflag.append([0.0, 1.0])  # spam
-        else:
-            docflag.append([1.0, 0.0])  # ham
-
-    batch.append(docvec)
-    batch.append(docflag)
-
-    return batch, return_flag
-    """
 
 
 def make_test_batch(trainset):
@@ -135,14 +90,14 @@ def make_test_batch(trainset):
     docflag = []
 
     # テスト用バッチでは学習用で用いなかった残りのデータを全て使用する
-    idx = [num for num in range(1000, 2000)]  # スパムメール分
-    idx_1 = [num for num in range(3000, 4000)]  # 正規メール分
+    idx = [num for num in range(500, 1000)]  # スパムメール分
+    idx_1 = [num for num in range(1500, 2000)]  # 正規メール分
     idx.extend(idx_1)
 
     for num in idx:
         docvec.append(trainset[num])
 
-        if num < 2000:
+        if num < 1000:
             docflag.append([0.0, 1.0])  # spam
         else:
             docflag.append([1.0, 0.0])  # ham
@@ -151,26 +106,6 @@ def make_test_batch(trainset):
     batch.append(docflag)
 
     return batch
-
-    """
-    # テスト用バッチでは学習用で用いなかった残りのデータを全て使用する
-    idx = [num for num in range(2500, 5000)]  # スパムメール分
-    idx_1 = [num for num in range(7500, 10000)]  # 正規メール分
-    idx.extend(idx_1)
-
-    for num in idx:
-        docvec.append(trainset[num])
-
-        if num < 5000:
-            docflag.append([0.0, 1.0])  # spam
-        else:
-            docflag.append([1.0, 0.0])  # ham
-
-    batch.append(docvec)
-    batch.append(docflag)
-
-    return batch
-    """
 
 
 def plot_test_acc(plot_handles):
@@ -300,11 +235,14 @@ def main(model_info_orderdict):
     for doc2vec_label, file_path in model_info_orderdict.items():
         with open(file_path, "r") as f:
             reader = csv.reader(f)
-            model_doc2vec_dict[doc2vec_label] = [row for row in reader]
+            #model_doc2vec_dict[doc2vec_label] = [row for row in reader]
+            model_doc2vec_dict[doc2vec_label] = [
+                [float(v) for v in row] for row in reader]
 
     sess = tf.InteractiveSession()
 
-    mail_doc2vec = tf.placeholder(tf.float32, shape=[None, 300])
+    mail_doc2vec = tf.placeholder(
+        tf.float32, shape=[None, 768])  # 元はshape=[None,300]
     mail_class = tf.placeholder(
         tf.float32, shape=[None, 2])  # 教師ラベルの種類　ham:[1,0],spam:[0,1]
 

@@ -8,6 +8,12 @@ import matplotlib.pyplot as plt
 from IPython import display
 from gensim.models import Doc2Vec
 from model_for_doc2vec import Model
+#from model_for_bert import Model
+
+import matplotlib
+import warnings
+warnings.filterwarnings(
+    'ignore', category=matplotlib.MatplotlibDeprecationWarning)
 
 
 class parameter:
@@ -16,8 +22,8 @@ class parameter:
     """
 
     def __init__(self):
-        self.ITERATIONS = 520
-        self.DISP_FREQ = 20
+        self.ITERATIONS = 520  # 元は520
+        self.DISP_FREQ = 20  # 元は20
         self.lams = [0]
 
     def set_lams(self, lams_value):
@@ -118,7 +124,7 @@ def plot_test_acc(plot_handles):
     plt.xlabel("Iterations")
     plt.ylabel("Test Accuracy")
     plt.yticks(np.arange(0.0, 1.1, 0.1))
-    plt.xticks(np.arange(0, 520, 50))
+    plt.xticks(np.arange(0, 520, 50))  # 元は0,520,20
     plt.ylim(0.0, 1.01)
     plt.grid(which='major', color='black', linestyle='-')
     display.display(plt.gcf())
@@ -153,7 +159,7 @@ def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, m
         # num_iter回学習を行う
         for iter in range(num_iter):
             # 初学習の場合と学習回数が20回以上の場合は新しい学習データでのみ学習
-            if iter > 20 or len(testsets) == 1:
+            if iter > 100 or len(testsets) == 1:
                 if len(lams) == 2 and first_flag == True:  # 初の学習を行う場合
                     train_batch, return_flag = random_batch(
                         trainset, 32, train_start_idx)
@@ -186,7 +192,7 @@ def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, m
                     model.train_step.run(feed_dict={mail_doc2vec: np.array(
                         train_batch[0]), mail_class: np.array(train_batch[1])})
 
-            elif iter % 2 == 0:  # 学習回数が20回未満、かつ学習回数が偶数回の場合
+            elif iter % 2 == 0:  # 学習回数が100回未満、かつ学習回数が偶数回の場合
                 if len(lams) == 2 and first_flag == True:  # 初の学習を行う場合
                     train_batch, return_flag = random_batch(
                         trainset, 32, train_start_idx)
@@ -219,7 +225,7 @@ def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, m
                     model.train_step.run(feed_dict={mail_doc2vec: np.array(
                         train_batch[0]), mail_class: np.array(train_batch[1])})
 
-            else:  # 学習回数が20回未満、かつ学習回数が奇数回の場合(つまりMVG)
+            else:  # 学習回数が100回未満、かつ学習回数が奇数回の場合(つまりMVG)
                 mvg_train_batch, return_flag = random_batch(
                     testsets[len(testsets)-1], 32, mvg_train_start_idx)
 
@@ -291,18 +297,21 @@ def main(model_info_orderdict):
     for doc2vec_label, file_path in model_info_orderdict.items():
         with open(file_path, "r") as f:
             reader = csv.reader(f)
-            model_doc2vec_dict[doc2vec_label] = [row for row in reader]
+            #model_doc2vec_dict[doc2vec_label] = [row for row in reader]
+            model_doc2vec_dict[doc2vec_label] = [
+                [float(v) for v in row] for row in reader]
 
-    sess = tf.InteractiveSession()
+    sess = tf.compat.v1.InteractiveSession()
 
-    mail_doc2vec = tf.placeholder(tf.float32, shape=[None, 300])
-    mail_class = tf.placeholder(
+    mail_doc2vec = tf.compat.v1.placeholder(
+        tf.float32, shape=[None, 300])  # doc2vecの場合300
+    mail_class = tf.compat.v1.placeholder(
         tf.float32, shape=[None, 2])  # 教師ラベルの種類　ham:[1,0],spam:[0,1]
 
     # ニューラルネットワークモデルの構築(モデルの具体的な構成はmodel_for_doc2vec.pyを参照)
     model = Model(mail_doc2vec, mail_class)
 
-    sess.run(tf.global_variables_initializer())
+    sess.run(tf.compat.v1.global_variables_initializer())
 
     for doc2vec_label in model_info_orderdict.keys():
         doc2vec_labels_list.append(doc2vec_label)
