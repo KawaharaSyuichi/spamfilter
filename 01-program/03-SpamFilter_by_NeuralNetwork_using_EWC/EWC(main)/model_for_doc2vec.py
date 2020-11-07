@@ -10,7 +10,7 @@ def weight_variable(shape):
     重みの初期化
     """
     # shape分の各要素が正規分布かつ標準偏差の2倍までのランダムな値で初期化
-    initial = tf.truncated_normal(shape, stddev=0.1)
+    initial = tf.random.truncated_normal(shape, stddev=0.1)
     return tf.Variable(initial)
 
 
@@ -146,7 +146,7 @@ class Model:
         """
         Stochastic Gradient Descent(SGD)を用いてパラメータを更新
         """
-        self.train_step = tf.train.GradientDescentOptimizer(
+        self.train_step = tf.compat.v1.train.GradientDescentOptimizer(
             0.1).minimize(self.cross_entropy)
 
     def update_ewc_loss(self, lam):
