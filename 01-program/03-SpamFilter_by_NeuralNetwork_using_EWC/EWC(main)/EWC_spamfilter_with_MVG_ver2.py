@@ -317,7 +317,169 @@ def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, m
     plt.show()
 
 
-def mvg(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq, sess, lams):
+def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq, sess, lams, same_flag=False):
+    train_start_idx = 0
+    doc2vec_2006 = copy.copy(doc2vec_dict['2006'])
+    doc2vec_2007 = copy.copy(doc2vec_dict['2007'])
+
+    # パラメータ読み込み
+    model.restore(sess)
+
+    # only SDG
+    model.set_vanilla_loss()
+
+    # 識別率を格納するためのリストを作成
+    test_accs = [[], []]  # 順に2006,2007(train_accsも同様)
+    train_accs = [[], []]
+
+    # どの年から学習するかの設定
+    train_doc2vec = copy.copy(doc2vec_dict['2006'])
+
+    for iteration in range(num_iter):
+        if iteration == 700:  # 2007年の学習に切り替え
+            train_doc2vec = copy.copy(
+                doc2vec_dict['2007'])
+
+            if mode == 'EWC':
+                # フィッシャー情報量の計算
+                model.compute_fisher(
+                    doc2vec_dict,
+                    sess,
+                    num_samples=400,
+                    plot_diffs=False
+                )
+
+                model.stor()
+
+                # 損失関数にEWCを適用
+                model.update_ewc_loss(lams[1])
+
+        train_batch, return_flag = random_batch(
+            train_doc2vec, 32, train_start_idx)
+
+        if return_flag == False:
+            train_start_idx += 1
+        elif return_flag == True:
+            train_start_idx = 0
+
+        # 学習開始
+        model.train_step.run(feed_dict={mail_doc2vec: np.array(
+            train_batch[0]), mail_class: np.array(train_batch[1])})
+
+        # disp_freq(=20)回学習するごとに、テスト用メールに対する識別率を求める
+        if iteration % disp_freq == 0:
+            # 2006年のテスト用データに対する識別率を算出
+            test_batch_2006 = make_test_batch(doc2vec_2006)
+
+            feed_dict_test_2006 = {mail_doc2vec: np.array(
+                test_batch_2006[0]), mail_class: np.array(test_batch_2006[1])}
+
+            test_accs[0].append(
+                model.accuracy.eval(feed_dict=feed_dict_test_2006))
+
+            # 2006年の学習用データに対する識別率を算出
+            train_batch_2006 = make_train_batch(doc2vec_2006)
+
+            feed_dict_train_2006 = {mail_doc2vec: np.array(
+                train_batch_2006[0]), mail_class: np.array(train_batch_2006[1])}
+
+            train_accs[0].append(
+                model.accuracy.eval(feed_dict=feed_dict_train_2006))
+
+            if iteration < 700:  # iterationが700未満の場合、2007年の分はNoneで埋める
+                train_accs[1].append(None)
+                test_accs[1].append(None)
+            else:
+                # 2007年のテスト用データに対する識別率を算出
+                test_batch_2007 = make_test_batch(doc2vec_2007)
+
+                feed_dict_test_2007 = {mail_doc2vec: np.array(
+                    test_batch_2007[0]), mail_class: np.array(test_batch_2007[1])}
+
+                test_accs[1].append(
+                    model.accuracy.eval(feed_dict=feed_dict_test_2007))
+
+                # 2007年の学習用データに対する識別率を算出
+                train_batch_2007 = make_train_batch(doc2vec_2007)
+
+                feed_dict_train_2007 = {mail_doc2vec: np.array(
+                    train_batch_2007[0]), mail_class: np.array(train_batch_2007[1])}
+
+                train_accs[1].append(
+                    model.accuracy.eval(feed_dict=feed_dict_train_2007))
+
+    if same_flag == False:  # 学習用とテスト用の識別率を別々にプロット
+        x_iter = list(range(1, num_iter, disp_freq))
+        # テスト用データの学習結果をプロット
+        plt.plot(x_iter, test_accs[0], marker='.',
+                 label='2006')  # 2006年分の識別率をプロット
+        plt.plot(x_iter, test_accs[1], marker='.',
+                 label='2007')  # 2007年分の識別率をプロット
+
+        plt.grid(which='major', color='black', linestyle='--')
+        plt.legend(loc="lower right", fontsize=15)
+        plt.xticks(np.arange(0, 1201, 100))
+        plt.ylim(bottom=0.40, top=1.01)
+        if mode == 'NOTEWC':
+            plt.title("CMP + SGD [test accuracy]")
+        else:
+            plt.title("CMP + EWC [test accuracy]")
+        plt.xlabel("Iterations")
+        plt.ylabel("Test Accuracy")
+        plt.show()
+
+        # 学習用データの学習結果をプロット
+        plt.plot(x_iter, train_accs[0], marker='.',
+                 label='2006')  # 2006年分の識別率をプロット
+        plt.plot(x_iter, train_accs[1], marker='.',
+                 label='2007')  # 2007年分の識別率をプロット
+
+        plt.grid(which='major', color='black', linestyle='--')
+        plt.legend(loc="lower right", fontsize=15)
+        plt.xticks(np.arange(0, 1201, 100))
+        plt.ylim(bottom=0.40, top=1.01)
+        if mode == 'NOTEWC':
+            plt.title("CMP + SGD [train accuracy]")
+        else:
+            plt.title("CMP + EWC [train accuracy]")
+        plt.xlabel("Iterations")
+        plt.ylabel("Train Accuracy")
+        plt.show()
+    else:  # 学習用とテスト用の識別率を同時にプロット
+        x_iter = list(range(1, num_iter, disp_freq))
+        # テスト用データの学習結果をプロット
+        plt.plot(x_iter, test_accs[0], marker='.', linestyle='-',
+                 label='2006(test)')  # 2006年分の識別率をプロット
+        plt.plot(x_iter, test_accs[1], marker='.', linestyle='-',
+                 label='2007(test)')  # 2007年分の識別率をプロット
+
+        # 学習用データの学習結果をプロット
+        plt.plot(x_iter, train_accs[0], marker='.', linestyle='--',
+                 label='2006(train)')  # 2006年分の識別率をプロット
+        plt.plot(x_iter, train_accs[1], marker='.', linestyle='--',
+                 label='2007(train)')  # 2007年分の識別率をプロット
+
+        plt.grid(which='major', color='black', linestyle='--')
+        plt.legend(loc="lower right", fontsize=15)
+        plt.xticks(np.arange(0, 1201, 100))
+        plt.ylim(bottom=0.40, top=1.01)
+        if mode == 'NOTEWC':
+            plt.title("CMP + SGD [train and test accuracy]")
+        else:
+            plt.title("CMP + EWC [train and test accuracy]")
+        plt.xlabel("Iterations")
+        plt.ylabel("Train and Test Accuracy")
+        plt.show()
+
+    print("=" * 10 + "test accs" + "=" * 10)
+    print("2006 test accs", test_accs[0][-1])
+    print("2007 test accs", test_accs[1][-1])
+    print("=" * 10 + "test accs" + "=" * 10)
+    print("2006 train accs", train_accs[0][-1])
+    print("2007 train accs", train_accs[1][-1])
+
+
+def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq, sess, lams, same_flag=False):
     train_start_idx = 0
     doc2vec_2005 = copy.copy(doc2vec_dict['2005'])
     doc2vec_2006 = copy.copy(doc2vec_dict['2006'])
@@ -439,46 +601,76 @@ def mvg(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                 train_accs[2].append(
                     model.accuracy.eval(feed_dict=feed_dict_train_2007))
 
-    x_iter = list(range(1, num_iter, disp_freq))
-    # テスト用データの学習結果をプロット
-    plt.plot(x_iter, test_accs[0], marker='.',
-             label='2005')  # 2005年分の識別率をプロット
-    plt.plot(x_iter, test_accs[1], marker='.',
-             label='2006')  # 2006年分の識別率をプロット
-    plt.plot(x_iter, test_accs[2], marker='.',
-             label='2007')  # 2007年分の識別率をプロット
+    if same_flag == False:  # 学習用とテスト用の識別率を別々にプロット
+        x_iter = list(range(1, num_iter, disp_freq))
+        # テスト用データの学習結果をプロット
+        plt.plot(x_iter, test_accs[0], marker='.',
+                 label='2005')  # 2005年分の識別率をプロット
+        plt.plot(x_iter, test_accs[1], marker='.',
+                 label='2006')  # 2006年分の識別率をプロット
+        plt.plot(x_iter, test_accs[2], marker='.',
+                 label='2007')  # 2007年分の識別率をプロット
 
-    plt.grid(which='major', color='black', linestyle='--')
-    plt.legend(loc="lower right", fontsize=15)
-    plt.xticks(np.arange(0, 1201, 100))
-    plt.ylim(bottom=0.40, top=1.01)
-    if mode == 'NOTEWC':
-        plt.title("MVG + SGD [test accuracy]")
-    else:
-        plt.title("MVG + EWC [test accuracy]")
-    plt.xlabel("Iterations")
-    plt.ylabel("Test Accuracy")
-    plt.show()
+        plt.grid(which='major', color='black', linestyle='--')
+        plt.legend(loc="lower right", fontsize=15)
+        plt.xticks(np.arange(0, 1201, 100))
+        plt.ylim(bottom=0.40, top=1.01)
+        if mode == 'NOTEWC':
+            plt.title("MVG + SGD [test accuracy]")
+        else:
+            plt.title("MVG + EWC [test accuracy]")
+        plt.xlabel("Iterations")
+        plt.ylabel("Test Accuracy")
+        plt.show()
 
-    # 学習用データの学習結果をプロット
-    plt.plot(x_iter, train_accs[0], marker='.',
-             label='2005')  # 2005年分の識別率をプロット
-    plt.plot(x_iter, train_accs[1], marker='.',
-             label='2006')  # 2006年分の識別率をプロット
-    plt.plot(x_iter, train_accs[2], marker='.',
-             label='2007')  # 2007年分の識別率をプロット
+        # 学習用データの学習結果をプロット
+        plt.plot(x_iter, train_accs[0], marker='.',
+                 label='2005')  # 2005年分の識別率をプロット
+        plt.plot(x_iter, train_accs[1], marker='.',
+                 label='2006')  # 2006年分の識別率をプロット
+        plt.plot(x_iter, train_accs[2], marker='.',
+                 label='2007')  # 2007年分の識別率をプロット
 
-    plt.grid(which='major', color='black', linestyle='--')
-    plt.legend(loc="lower right", fontsize=15)
-    plt.xticks(np.arange(0, 1201, 100))
-    plt.ylim(bottom=0.40, top=1.01)
-    if mode == 'NOTEWC':
-        plt.title("MVG + SGD [train accuracy]")
-    else:
-        plt.title("MVG + EWC [train accuracy]")
-    plt.xlabel("Iterations")
-    plt.ylabel("Train Accuracy")
-    plt.show()
+        plt.grid(which='major', color='black', linestyle='--')
+        plt.legend(loc="lower right", fontsize=15)
+        plt.xticks(np.arange(0, 1201, 100))
+        plt.ylim(bottom=0.40, top=1.01)
+        if mode == 'NOTEWC':
+            plt.title("MVG + SGD [train accuracy]")
+        else:
+            plt.title("MVG + EWC [train accuracy]")
+        plt.xlabel("Iterations")
+        plt.ylabel("Train Accuracy")
+        plt.show()
+    else:  # 学習用とテスト用の識別率を同時にプロット
+        x_iter = list(range(1, num_iter, disp_freq))
+        # テスト用データの学習結果をプロット
+        plt.plot(x_iter, test_accs[0], marker='.', linestyle='-',
+                 label='2005(test)')  # 2005年分の識別率をプロット
+        plt.plot(x_iter, test_accs[1], marker='.', linestyle='-',
+                 label='2006(test)')  # 2006年分の識別率をプロット
+        plt.plot(x_iter, test_accs[2], marker='.', linestyle='-',
+                 label='2007(test)')  # 2007年分の識別率をプロット
+
+        # 学習用データの学習結果をプロット
+        plt.plot(x_iter, train_accs[0], marker='.', linestyle='--',
+                 label='2005(train)')  # 2005年分の識別率をプロット
+        plt.plot(x_iter, train_accs[1], marker='.', linestyle='--',
+                 label='2006(train)')  # 2006年分の識別率をプロット
+        plt.plot(x_iter, train_accs[2], marker='.', linestyle='--',
+                 label='2007(train)')  # 2007年分の識別率をプロット
+
+        plt.grid(which='major', color='black', linestyle='--')
+        plt.legend(loc="lower right", fontsize=15)
+        plt.xticks(np.arange(0, 1201, 100))
+        plt.ylim(bottom=0.40, top=1.01)
+        if mode == 'NOTEWC':
+            plt.title("MVG + SGD [train and test accuracy]")
+        else:
+            plt.title("MVG + EWC [train and test accuracy]")
+        plt.xlabel("Iterations")
+        plt.ylabel("Train and Test Accuracy")
+        plt.show()
 
     print("=" * 10 + "test accs" + "=" * 10)
     print("2005 test accs", test_accs[0][-1])
@@ -526,16 +718,32 @@ def main():
     sess.run(tf.compat.v1.global_variables_initializer())
 
     PARAMETERS.set_lams(50)
-    mvg(
+    """
+    MVG(
         model,
-        'EWC',
+        'NOTEWC',
         mail_doc2vec,
         mail_class,
         model_doc2vec_dict,
         PARAMETERS.ITERATIONS,
         PARAMETERS.DISP_FREQ,
         sess,
-        PARAMETERS.lams
+        PARAMETERS.lams,
+        same_flag=True
+    )
+    """
+
+    CMP(
+        model,
+        'NOTEWC',
+        mail_doc2vec,
+        mail_class,
+        model_doc2vec_dict,
+        PARAMETERS.ITERATIONS,
+        PARAMETERS.DISP_FREQ,
+        sess,
+        PARAMETERS.lams,
+        same_flag=False
     )
 
 
