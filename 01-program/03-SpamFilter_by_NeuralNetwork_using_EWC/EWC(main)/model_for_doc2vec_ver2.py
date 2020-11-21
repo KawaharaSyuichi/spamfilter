@@ -72,10 +72,12 @@ class Model:
 
         self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-    def compute_fisher(self, doc2vec_model, sess, num_samples=200, plot_diffs=False, disp_freq=10):
+    def compute_fisher(self, doc2vec_model_dict, sess, num_samples=200, plot_diffs=False, disp_freq=10):
         """
         フィッシャー情報量の計算
         """
+        doc2vec_model = doc2vec_model_dict['2005']
+        doc2vec_model.extend(doc2vec_model_dict['2006'])
 
         self.F_accum = []
         for v in range(len(self.var_list)):
@@ -94,8 +96,10 @@ class Model:
         sum_validation = []
         sum_validation.extend(list(range(1000, 1100)))  # [1000,1001,...,1099]
         sum_validation.extend(list(range(100)))  # [0,1,2,...,99]
+        sum_validation.extend(list(range(3000, 3100)))  # [1000,1001,...,1099]
+        sum_validation.extend(list(range(3100)))  # [0,1,2,...,99]
 
-        for i in range(num_samples):  # num_samples=200
+        for i in range(num_samples):  # num_samples=400
             # フィッシャー情報行列の計算
             im_ind = sum_validation.pop(0)
 
@@ -158,7 +162,7 @@ class Model:
         Stochastic Gradient Descent(SGD)を用いてパラメータを更新
         """
         self.train_step = tf.compat.v1.train.GradientDescentOptimizer(
-            0.02).minimize(self.cross_entropy)
+            0.006).minimize(self.cross_entropy)
 
     def update_ewc_loss(self, lam):
         # elastic weight consolidation
@@ -180,4 +184,4 @@ class Model:
 
         # フィッシャー情報量を用いてパラメータ更新
         self.train_step = tf.train.GradientDescentOptimizer(
-            0.02).minimize(self.ewc_loss)  # 学習率0.1として、ewcで求めた損失関数値を最小にするようにパラメータを学習する。
+            0.006).minimize(self.ewc_loss)  # 学習率0.1として、ewcで求めた損失関数値を最小にするようにパラメータを学習する。

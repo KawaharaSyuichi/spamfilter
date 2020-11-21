@@ -317,171 +317,177 @@ def train_task(model, num_iter, disp_freq, trainset, doc2vec_labels, testsets, m
     plt.show()
 
 
-def mvg(model, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq, sess, lams):
+def mvg(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq, sess, lams):
     train_start_idx = 0
     doc2vec_2005 = copy.copy(doc2vec_dict['2005'])
     doc2vec_2006 = copy.copy(doc2vec_dict['2006'])
     doc2vec_2007 = copy.copy(doc2vec_dict['2007'])
 
-    for l in range(len(lams)):
-        # パラメータ読み込み
-        model.restore(sess)
+    # パラメータ読み込み
+    model.restore(sess)
 
-        if (lams[l] == 0):
-            # only SDG
-            model.set_vanilla_loss()
-        else:
-            # EWC
-            model.update_ewc_loss(lams[l])
+    # only SDG
+    model.set_vanilla_loss()
 
-        # 識別率を格納するためのリストを作成
-        test_accs = [[], [], []]  # 順に2005,2006,2007(train_accsも同様)
-        train_accs = [[], [], []]
+    # 識別率を格納するためのリストを作成
+    test_accs = [[], [], []]  # 順に2005,2006,2007(train_accsも同様)
+    train_accs = [[], [], []]
 
-        # どの年から学習するかの設定
-        switch_flag = 2005
+    # どの年から学習するかの設定
+    switch_flag = 2005
 
-        for iteration in range(num_iter):
-            if iteration < 700:  # # 2005年と2006年を20iterationごとに切り替えて学習
-                if iteration == 0:  # 最初は2005年を学習
-                    train_doc2vec = copy.copy(
-                        doc2vec_dict['2005'])
-                elif iteration % 20 == 0 and switch_flag == 2005:  # 2006年の学習に切り替え
-                    train_doc2vec = copy.copy(
-                        doc2vec_dict['2006'])
-                    switch_flag = 2006
-                elif iteration % 20 == 0 and switch_flag == 2006:  # 2005年の学習に切り替え
-                    train_doc2vec = copy.copy(
-                        doc2vec_dict['2005'])
-                    switch_flag = 2005
-            elif iteration == 700:  # 2007年の学習に切り替え
+    for iteration in range(num_iter):
+        if iteration < 700:  # # 2005年と2006年を20iterationごとに切り替えて学習
+            if iteration == 0:  # 最初は2005年を学習
                 train_doc2vec = copy.copy(
-                    doc2vec_dict['2007'])
+                    doc2vec_dict['2005'])
+            elif iteration % 20 == 0 and switch_flag == 2005:  # 2006年の学習に切り替え
+                train_doc2vec = copy.copy(
+                    doc2vec_dict['2006'])
+                switch_flag = 2006
+            elif iteration % 20 == 0 and switch_flag == 2006:  # 2005年の学習に切り替え
+                train_doc2vec = copy.copy(
+                    doc2vec_dict['2005'])
+                switch_flag = 2005
+        elif iteration == 700:  # 2007年の学習に切り替え
+            train_doc2vec = copy.copy(
+                doc2vec_dict['2007'])
 
-            train_batch, return_flag = random_batch(
-                train_doc2vec, 32, train_start_idx)
+            if mode == 'EWC':
+                # フィッシャー情報量の計算
+                model.compute_fisher(
+                    doc2vec_dict,
+                    sess,
+                    num_samples=400,
+                    plot_diffs=False
+                )
 
-            if return_flag == False:
-                train_start_idx += 1
-            elif return_flag == True:
-                train_start_idx = 0
+                model.stor()
 
-            # 学習開始
-            model.train_step.run(feed_dict={mail_doc2vec: np.array(
-                train_batch[0]), mail_class: np.array(train_batch[1])})
+                # 損失関数にEWCを適用
+                model.update_ewc_loss(lams[1])
 
-            # disp_freq(=20)回学習するごとに、テスト用メールに対する識別率を求める
-            if iteration % disp_freq == 0:
-                # 2005年のテスト用データに対する識別率を算出
-                test_batch_2005 = make_test_batch(doc2vec_2005)
+        train_batch, return_flag = random_batch(
+            train_doc2vec, 32, train_start_idx)
 
-                feed_dict_test_2005 = {mail_doc2vec: np.array(
-                    test_batch_2005[0]), mail_class: np.array(test_batch_2005[1])}
+        if return_flag == False:
+            train_start_idx += 1
+        elif return_flag == True:
+            train_start_idx = 0
 
-                test_accs[0].append(
-                    model.accuracy.eval(feed_dict=feed_dict_test_2005))
+        # 学習開始
+        model.train_step.run(feed_dict={mail_doc2vec: np.array(
+            train_batch[0]), mail_class: np.array(train_batch[1])})
 
-                # 2005年の学習用データに対する識別率を算出
-                train_batch_2005 = make_train_batch(doc2vec_2005)
+        # disp_freq(=20)回学習するごとに、テスト用メールに対する識別率を求める
+        if iteration % disp_freq == 0:
+            # 2005年のテスト用データに対する識別率を算出
+            test_batch_2005 = make_test_batch(doc2vec_2005)
 
-                feed_dict_train_2005 = {mail_doc2vec: np.array(
-                    train_batch_2005[0]), mail_class: np.array(train_batch_2005[1])}
+            feed_dict_test_2005 = {mail_doc2vec: np.array(
+                test_batch_2005[0]), mail_class: np.array(test_batch_2005[1])}
 
-                train_accs[0].append(
-                    model.accuracy.eval(feed_dict=feed_dict_train_2005))
+            test_accs[0].append(
+                model.accuracy.eval(feed_dict=feed_dict_test_2005))
 
-                # 2006年のテスト用データに対する識別率を算出
-                test_batch_2006 = make_test_batch(doc2vec_2006)
+            # 2005年の学習用データに対する識別率を算出
+            train_batch_2005 = make_train_batch(doc2vec_2005)
 
-                feed_dict_test_2006 = {mail_doc2vec: np.array(
-                    test_batch_2006[0]), mail_class: np.array(test_batch_2006[1])}
+            feed_dict_train_2005 = {mail_doc2vec: np.array(
+                train_batch_2005[0]), mail_class: np.array(train_batch_2005[1])}
 
-                test_accs[1].append(
-                    model.accuracy.eval(feed_dict=feed_dict_test_2006))
+            train_accs[0].append(
+                model.accuracy.eval(feed_dict=feed_dict_train_2005))
 
-                # 2006年の学習用データに対する識別率を算出
-                train_batch_2006 = make_train_batch(doc2vec_2006)
+            # 2006年のテスト用データに対する識別率を算出
+            test_batch_2006 = make_test_batch(doc2vec_2006)
 
-                feed_dict_train_2006 = {mail_doc2vec: np.array(
-                    train_batch_2006[0]), mail_class: np.array(train_batch_2006[1])}
+            feed_dict_test_2006 = {mail_doc2vec: np.array(
+                test_batch_2006[0]), mail_class: np.array(test_batch_2006[1])}
 
-                train_accs[1].append(
-                    model.accuracy.eval(feed_dict=feed_dict_train_2006))
+            test_accs[1].append(
+                model.accuracy.eval(feed_dict=feed_dict_test_2006))
 
-                if iteration < 700:  # iterationが700未満の場合、2007年の分はNoneで埋める
-                    train_accs[2].append(None)
-                    test_accs[2].append(None)
-                else:
-                    # 2007年のテスト用データに対する識別率を算出
-                    test_batch_2007 = make_test_batch(doc2vec_2007)
+            # 2006年の学習用データに対する識別率を算出
+            train_batch_2006 = make_train_batch(doc2vec_2006)
 
-                    feed_dict_test_2007 = {mail_doc2vec: np.array(
-                        test_batch_2007[0]), mail_class: np.array(test_batch_2007[1])}
+            feed_dict_train_2006 = {mail_doc2vec: np.array(
+                train_batch_2006[0]), mail_class: np.array(train_batch_2006[1])}
 
-                    test_accs[2].append(
-                        model.accuracy.eval(feed_dict=feed_dict_test_2007))
+            train_accs[1].append(
+                model.accuracy.eval(feed_dict=feed_dict_train_2006))
 
-                    # 2007年の学習用データに対する識別率を算出
-                    train_batch_2007 = make_train_batch(doc2vec_2007)
+            if iteration < 700:  # iterationが700未満の場合、2007年の分はNoneで埋める
+                train_accs[2].append(None)
+                test_accs[2].append(None)
+            else:
+                # 2007年のテスト用データに対する識別率を算出
+                test_batch_2007 = make_test_batch(doc2vec_2007)
 
-                    feed_dict_train_2007 = {mail_doc2vec: np.array(
-                        train_batch_2007[0]), mail_class: np.array(train_batch_2007[1])}
+                feed_dict_test_2007 = {mail_doc2vec: np.array(
+                    test_batch_2007[0]), mail_class: np.array(test_batch_2007[1])}
 
-                    train_accs[2].append(
-                        model.accuracy.eval(feed_dict=feed_dict_train_2007))
+                test_accs[2].append(
+                    model.accuracy.eval(feed_dict=feed_dict_test_2007))
 
-        x_iter = list(range(1, num_iter, disp_freq))
-        # テスト用データの学習結果をプロット
-        plt.plot(x_iter, test_accs[0], marker='.',
-                 label='2005')  # 2005年分の識別率をプロット
-        plt.plot(x_iter, test_accs[1], marker='.',
-                 label='2006')  # 2006年分の識別率をプロット
-        plt.plot(x_iter, test_accs[2], marker='.',
-                 label='2007')  # 2007年分の識別率をプロット
+                # 2007年の学習用データに対する識別率を算出
+                train_batch_2007 = make_train_batch(doc2vec_2007)
 
-        plt.grid(which='major', color='black', linestyle='--')
-        plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1201, 100))
-        plt.ylim(bottom=0.45, top=1.01)
-        if l == 0:
-            plt.title("MVG + SGD [test accuracy]")
-        else:
-            plt.title("MVG + EWC [test accuracy]")
-        plt.xlabel("Iterations")
-        plt.ylabel("Test Accuracy")
-        plt.show()
+                feed_dict_train_2007 = {mail_doc2vec: np.array(
+                    train_batch_2007[0]), mail_class: np.array(train_batch_2007[1])}
 
-        # 学習用データの学習結果をプロット
-        plt.plot(x_iter, train_accs[0], marker='.',
-                 label='2005')  # 2005年分の識別率をプロット
-        plt.plot(x_iter, train_accs[1], marker='.',
-                 label='2006')  # 2006年分の識別率をプロット
-        plt.plot(x_iter, train_accs[2], marker='.',
-                 label='2007')  # 2007年分の識別率をプロット
+                train_accs[2].append(
+                    model.accuracy.eval(feed_dict=feed_dict_train_2007))
 
-        plt.grid(which='major', color='black', linestyle='--')
-        plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1201, 100))
-        plt.ylim(bottom=0.45, top=1.01)
-        if l == 0:
-            plt.title("MVG + SGD [train accuracy]")
-        else:
-            plt.title("MVG + EWC [train accuracy]")
-        plt.xlabel("Iterations")
-        plt.ylabel("Test Accuracy")
-        plt.show()
+    x_iter = list(range(1, num_iter, disp_freq))
+    # テスト用データの学習結果をプロット
+    plt.plot(x_iter, test_accs[0], marker='.',
+             label='2005')  # 2005年分の識別率をプロット
+    plt.plot(x_iter, test_accs[1], marker='.',
+             label='2006')  # 2006年分の識別率をプロット
+    plt.plot(x_iter, test_accs[2], marker='.',
+             label='2007')  # 2007年分の識別率をプロット
 
-        if l == 0:
-            # フィッシャー情報量の計算
-            model.compute_fisher(
-                doc2vec_dict,
-                sess,
-                num_samples=400,
-                plot_diffs=True
-            )
+    plt.grid(which='major', color='black', linestyle='--')
+    plt.legend(loc="lower right", fontsize=15)
+    plt.xticks(np.arange(0, 1201, 100))
+    plt.ylim(bottom=0.40, top=1.01)
+    if mode == 'NOTEWC':
+        plt.title("MVG + SGD [test accuracy]")
+    else:
+        plt.title("MVG + EWC [test accuracy]")
+    plt.xlabel("Iterations")
+    plt.ylabel("Test Accuracy")
+    plt.show()
 
-            # パラメータ保存
-            model.stor()
+    # 学習用データの学習結果をプロット
+    plt.plot(x_iter, train_accs[0], marker='.',
+             label='2005')  # 2005年分の識別率をプロット
+    plt.plot(x_iter, train_accs[1], marker='.',
+             label='2006')  # 2006年分の識別率をプロット
+    plt.plot(x_iter, train_accs[2], marker='.',
+             label='2007')  # 2007年分の識別率をプロット
+
+    plt.grid(which='major', color='black', linestyle='--')
+    plt.legend(loc="lower right", fontsize=15)
+    plt.xticks(np.arange(0, 1201, 100))
+    plt.ylim(bottom=0.40, top=1.01)
+    if mode == 'NOTEWC':
+        plt.title("MVG + SGD [train accuracy]")
+    else:
+        plt.title("MVG + EWC [train accuracy]")
+    plt.xlabel("Iterations")
+    plt.ylabel("Train Accuracy")
+    plt.show()
+
+    print("=" * 10 + "test accs" + "=" * 10)
+    print("2005 test accs", test_accs[0][-1])
+    print("2006 test accs", test_accs[1][-1])
+    print("2007 test accs", test_accs[2][-1])
+    print("=" * 10 + "test accs" + "=" * 10)
+    print("2005 train accs", train_accs[0][-1])
+    print("2006 train accs", train_accs[1][-1])
+    print("2007 train accs", train_accs[2][-1])
 
 
 def main():
@@ -519,31 +525,10 @@ def main():
 
     sess.run(tf.compat.v1.global_variables_initializer())
 
-    """
-    for doc2vec_label in model_info_orderdict.keys():
-        doc2vec_labels_list.append(doc2vec_label)
-        model_doc2vec_learned_list.append(model_doc2vec_dict[doc2vec_label])
-
-        train_task(model, PARAMETERS.ITERATIONS, PARAMETERS.DISP_FREQ,
-                   model_doc2vec_dict[doc2vec_label], doc2vec_labels_list, model_doc2vec_learned_list, mail_doc2vec, mail_class, sess, PARAMETERS.lams)
-
-        if doc2vec_label == '2007':
-            break
-
-        # 各ラベルのフィッシャー情報量の計算
-        model.compute_fisher(model_doc2vec_dict[doc2vec_label], sess,
-                             num_samples=200, plot_diffs=True)
-
-        # 重みとバイアスのパラメータ保存
-        model.stor()
-
-        if len(PARAMETERS.lams) == 1:
-            PARAMETERS.set_lams(50)
-    """
-
     PARAMETERS.set_lams(50)
     mvg(
         model,
+        'EWC',
         mail_doc2vec,
         mail_class,
         model_doc2vec_dict,
