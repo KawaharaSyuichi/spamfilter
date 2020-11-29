@@ -28,7 +28,7 @@ class parameter:
     """
 
     def __init__(self):
-        self.ITERATIONS = 1220  # 元は520
+        self.ITERATIONS = 1320  # 元は520
         self.DISP_FREQ = 20  # 元は20
         self.lams = [0]
 
@@ -336,7 +336,7 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
     train_doc2vec = copy.copy(doc2vec_dict['2006'])
 
     for iteration in range(num_iter):
-        if iteration == 700:  # 2007年の学習に切り替え
+        if iteration == 800:  # 2007年の学習に切り替え
             train_doc2vec = copy.copy(
                 doc2vec_dict['2007'])
 
@@ -386,7 +386,7 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
             train_accs[0].append(
                 model.accuracy.eval(feed_dict=feed_dict_train_2006))
 
-            if iteration < 700:  # iterationが700未満の場合、2007年の分はNoneで埋める
+            if iteration < 800:  # iterationが700未満の場合、2007年の分はNoneで埋める
                 train_accs[1].append(None)
                 test_accs[1].append(None)
             else:
@@ -398,6 +398,10 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
                 test_accs[1].append(
                     model.accuracy.eval(feed_dict=feed_dict_test_2007))
+
+                if iteration == 800 or iteration == 820:
+                    print("2007 CMP+{} acc : {:.1f}% , iteration : {}".format(
+                        mode, test_accs[1][-1] * 100, iteration))
 
                 # 2007年の学習用データに対する識別率を算出
                 train_batch_2007 = make_train_batch(doc2vec_2007)
@@ -418,7 +422,7 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
         plt.grid(which='major', color='black', linestyle='--')
         plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1201, 100))
+        plt.xticks(np.arange(0, 1301, 100))
         plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("CMP + SGD [test accuracy]")
@@ -436,7 +440,7 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
         plt.grid(which='major', color='black', linestyle='--')
         plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1201, 100))
+        plt.xticks(np.arange(0, 1301, 100))
         plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("CMP + SGD [train accuracy]")
@@ -461,7 +465,7 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
         plt.grid(which='major', color='black', linestyle='--')
         plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1201, 100))
+        plt.xticks(np.arange(0, 1301, 100))
         plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("CMP + SGD [train and test accuracy]")
@@ -499,7 +503,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
     switch_flag = 2005
 
     for iteration in range(num_iter):
-        if iteration < 700:  # # 2005年と2006年を20iterationごとに切り替えて学習
+        if iteration < 800:  # # 2005年と2006年を20iterationごとに切り替えて学習
             if iteration == 0:  # 最初は2005年を学習
                 train_doc2vec = copy.copy(
                     doc2vec_dict['2005'])
@@ -511,7 +515,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                 train_doc2vec = copy.copy(
                     doc2vec_dict['2005'])
                 switch_flag = 2005
-        elif iteration == 700:  # 2007年の学習に切り替え
+        elif iteration == 800:  # 2007年の学習に切り替え
             train_doc2vec = copy.copy(
                 doc2vec_dict['2007'])
 
@@ -579,7 +583,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
             train_accs[1].append(
                 model.accuracy.eval(feed_dict=feed_dict_train_2006))
 
-            if iteration < 700:  # iterationが700未満の場合、2007年の分はNoneで埋める
+            if iteration < 800:  # iterationが700未満の場合、2007年の分はNoneで埋める
                 train_accs[2].append(None)
                 test_accs[2].append(None)
             else:
@@ -591,6 +595,10 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
                 test_accs[2].append(
                     model.accuracy.eval(feed_dict=feed_dict_test_2007))
+
+                if iteration == 800 or iteration == 820:
+                    print("2007 MVG+{} acc : {:.1f}% , iteration : {}".format(
+                        mode, test_accs[2][-1] * 100, iteration))
 
                 # 2007年の学習用データに対する識別率を算出
                 train_batch_2007 = make_train_batch(doc2vec_2007)
@@ -613,7 +621,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
         plt.grid(which='major', color='black', linestyle='--')
         plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1201, 100))
+        plt.xticks(np.arange(0, 1301, 100))
         plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("MVG + SGD [test accuracy]")
@@ -633,7 +641,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
         plt.grid(which='major', color='black', linestyle='--')
         plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1201, 100))
+        plt.xticks(np.arange(0, 1301, 100))
         plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("MVG + SGD [train accuracy]")
@@ -662,7 +670,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
         plt.grid(which='major', color='black', linestyle='--')
         plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1201, 100))
+        plt.xticks(np.arange(0, 1301, 100))
         plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("MVG + SGD [train and test accuracy]")
@@ -721,7 +729,7 @@ def main():
     """
     MVG(
         model,
-        'NOTEWC',
+        'EWC',
         mail_doc2vec,
         mail_class,
         model_doc2vec_dict,
@@ -735,7 +743,7 @@ def main():
 
     CMP(
         model,
-        'NOTEWC',
+        'EWC',
         mail_doc2vec,
         mail_class,
         model_doc2vec_dict,
@@ -743,7 +751,7 @@ def main():
         PARAMETERS.DISP_FREQ,
         sess,
         PARAMETERS.lams,
-        same_flag=False
+        same_flag=True
     )
 
 
