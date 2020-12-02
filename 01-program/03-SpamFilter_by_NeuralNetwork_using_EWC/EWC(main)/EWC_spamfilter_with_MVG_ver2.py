@@ -336,6 +336,7 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
     train_doc2vec = copy.copy(doc2vec_dict['2006'])
 
     for iteration in range(num_iter):
+        print('iteration', iteration)
         if iteration == 800:  # 2007年の学習に切り替え
             train_doc2vec = copy.copy(
                 doc2vec_dict['2007'])
@@ -411,6 +412,9 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
                 train_accs[1].append(
                     model.accuracy.eval(feed_dict=feed_dict_train_2007))
+
+        # 一回学習するごとに重みに0.99を乗算する
+        model.multiply_weight(sess)
 
     if same_flag == False:  # 学習用とテスト用の識別率を別々にプロット
         x_iter = list(range(1, num_iter, disp_freq))
@@ -609,6 +613,9 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                 train_accs[2].append(
                     model.accuracy.eval(feed_dict=feed_dict_train_2007))
 
+        # 一回学習するごとに重みに0.99を乗算する
+        model.multiply_weight(sess)
+
     if same_flag == False:  # 学習用とテスト用の識別率を別々にプロット
         x_iter = list(range(1, num_iter, disp_freq))
         # テスト用データの学習結果をプロット
@@ -726,6 +733,7 @@ def main():
     sess.run(tf.compat.v1.global_variables_initializer())
 
     PARAMETERS.set_lams(50)
+
     """
     MVG(
         model,

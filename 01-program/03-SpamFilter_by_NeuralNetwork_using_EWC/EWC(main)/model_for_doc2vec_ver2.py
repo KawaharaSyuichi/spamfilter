@@ -185,3 +185,22 @@ class Model:
         # フィッシャー情報量を用いてパラメータ更新
         self.train_step = tf.train.GradientDescentOptimizer(
             0.006).minimize(self.ewc_loss)  # 学習率0.1として、ewcで求めた損失関数値を最小にするようにパラメータを学習する。
+
+    def multiply_weight(self, sess):  # 一回学習するごとに重みに0.99を乗算する
+        """
+        weight_var = self.var_list[0]
+        print('sess.run(weight_var) befor : ', sess.run(weight_var))
+        """
+
+        for i, var in enumerate(self.var_list):
+            if i % 2 == 0:
+                weight_var = self.var_list[i]
+                const = tf.constant(0.99)
+                calc_op = weight_var * const
+                assign_op = tf.assign(self.var_list[i], calc_op)
+
+                sess.run(assign_op)
+        """
+        weight_var = self.var_list[0]
+        print('sess.run(weight_var) after : ', sess.run(weight_var))
+        """
