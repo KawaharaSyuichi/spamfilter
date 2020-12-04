@@ -598,6 +598,10 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
     test_accs = [[], [], []]  # 順に2005,2006,2007(train_accsも同様)
     train_accs = [[], [], []]
 
+    # lossを格納するためのリストを作成
+    test_losses = [[], [], []]  # 順に2006,2007,2008(train_lossesも同様)
+    train_losses = [[], [], []]
+
     # どの年から学習するかの設定
     switch_flag = 2005
 
@@ -655,6 +659,10 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
             test_accs[0].append(
                 model.accuracy.eval(feed_dict=feed_dict_test_2005))
 
+            # 2005年のテスト用データに対するlossを算出
+            test_losses[0].append(
+                model.accuracy.eval(feed_dict=feed_dict_test_2005))
+
             # 2005年の学習用データに対する識別率を算出
             train_batch_2005 = make_train_batch(doc2vec_2005)
 
@@ -662,6 +670,10 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                 train_batch_2005[0]), mail_class: np.array(train_batch_2005[1])}
 
             train_accs[0].append(
+                model.accuracy.eval(feed_dict=feed_dict_train_2005))
+
+            # 2005年の学習用データに対するlossを算出
+            train_losses[0].append(
                 model.accuracy.eval(feed_dict=feed_dict_train_2005))
 
             # 2006年のテスト用データに対する識別率を算出
@@ -673,6 +685,10 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
             test_accs[1].append(
                 model.accuracy.eval(feed_dict=feed_dict_test_2006))
 
+            # 2006年のテスト用データに対するlossを算出
+            test_losses[1].append(
+                model.accuracy.eval(feed_dict=feed_dict_test_2006))
+
             # 2006年の学習用データに対する識別率を算出
             train_batch_2006 = make_train_batch(doc2vec_2006)
 
@@ -682,9 +698,15 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
             train_accs[1].append(
                 model.accuracy.eval(feed_dict=feed_dict_train_2006))
 
-            if iteration < 800:  # iterationが700未満の場合、2007年の分はNoneで埋める
+            # 2006年の学習用データに対するlossを算出
+            train_losses[1].append(
+                model.accuracy.eval(feed_dict=feed_dict_train_2006))
+
+            if iteration < 800:  # iterationが800未満の場合、2007年の分はNoneで埋める
                 train_accs[2].append(None)
                 test_accs[2].append(None)
+                train_losses[2].append(None)
+                test_losses[2].append(None)
             else:
                 # 2007年のテスト用データに対する識別率を算出
                 test_batch_2007 = make_test_batch(doc2vec_2007)
@@ -693,6 +715,10 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                     test_batch_2007[0]), mail_class: np.array(test_batch_2007[1])}
 
                 test_accs[2].append(
+                    model.accuracy.eval(feed_dict=feed_dict_test_2007))
+
+                # 2007年のテスト用データに対するlossを算出
+                test_losses[2].append(
                     model.accuracy.eval(feed_dict=feed_dict_test_2007))
 
                 if iteration == 800 or iteration == 820:
@@ -708,12 +734,19 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                 train_accs[2].append(
                     model.accuracy.eval(feed_dict=feed_dict_train_2007))
 
+                # 2007年の学習用データに対するlossを算出
+                train_losses[2].append(
+                    model.accuracy.eval(feed_dict=feed_dict_train_2007))
+
         # 一回学習するごとに重みに0.99を乗算する
         model.multiply_weight(sess)
 
     if same_flag == False:  # 学習用とテスト用の識別率を別々にプロット
         x_iter = list(range(1, num_iter, disp_freq))
         # テスト用データの学習結果をプロット
+        ########################################################
+        #                      識別率のプロット(個別)             #
+        ########################################################
         plt.plot(x_iter, test_accs[0], marker='.',
                  label='2005')  # 2005年分の識別率をプロット
         plt.plot(x_iter, test_accs[1], marker='.',
@@ -752,9 +785,54 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
         plt.xlabel("Iterations")
         plt.ylabel("Train Accuracy")
         plt.show()
+
+        ########################################################
+        #                      lossのプロット(個別)             #
+        ########################################################
+        plt.plot(x_iter, test_losses[0], marker='.',
+                 label='2005')  # 2005年分のlossをプロット
+        plt.plot(x_iter, test_losses[1], marker='.',
+                 label='2006')  # 2006年分のlossをプロット
+        plt.plot(x_iter, test_losses[2], marker='.',
+                 label='2007')  # 2007年分のlossをプロット
+
+        plt.grid(which='major', color='black', linestyle='--')
+        plt.legend(loc="lower right", fontsize=15)
+        plt.xticks(np.arange(0, 1301, 100))
+        #plt.ylim(bottom=0.40, top=1.01)
+        if mode == 'NOTEWC':
+            plt.title("MVG + SGD [test loss]")
+        else:
+            plt.title("MVG + EWC [test loss]")
+        plt.xlabel("Iterations")
+        plt.ylabel("Test loss")
+        plt.show()
+
+        # 学習用データの学習結果をプロット
+        plt.plot(x_iter, train_losses[0], marker='.',
+                 label='2005')  # 2005年分のlossをプロット
+        plt.plot(x_iter, train_losses[1], marker='.',
+                 label='2006')  # 2006年分のlossをプロット
+        plt.plot(x_iter, train_losses[2], marker='.',
+                 label='2007')  # 2007年分のlossをプロット
+
+        plt.grid(which='major', color='black', linestyle='--')
+        plt.legend(loc="lower right", fontsize=15)
+        plt.xticks(np.arange(0, 1301, 100))
+        #plt.ylim(bottom=0.40, top=1.01)
+        if mode == 'NOTEWC':
+            plt.title("MVG + SGD [train loss]")
+        else:
+            plt.title("MVG + EWC [train loss]")
+        plt.xlabel("Iterations")
+        plt.ylabel("Train loss")
+        plt.show()
     else:  # 学習用とテスト用の識別率を同時にプロット
         x_iter = list(range(1, num_iter, disp_freq))
         # テスト用データの学習結果をプロット
+        ########################################################
+        #                      識別率のプロット(同時)             #
+        ########################################################
         plt.plot(x_iter, test_accs[0], marker='.', linestyle='-',
                  label='2005(test)')  # 2005年分の識別率をプロット
         plt.plot(x_iter, test_accs[1], marker='.', linestyle='-',
@@ -780,6 +858,36 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
             plt.title("MVG + EWC [train and test accuracy]")
         plt.xlabel("Iterations")
         plt.ylabel("Train and Test Accuracy")
+        plt.show()
+
+        ########################################################
+        #                      lossのプロット(個別)              #
+        ########################################################
+        plt.plot(x_iter, test_losses[0], marker='.', linestyle='-',
+                 label='2005(test)')  # 2005年分のlossをプロット
+        plt.plot(x_iter, test_losses[1], marker='.', linestyle='-',
+                 label='2006(test)')  # 2006年分のlossをプロット
+        plt.plot(x_iter, test_losses[2], marker='.', linestyle='-',
+                 label='2007(test)')  # 2007年分のlossをプロット
+
+        # 学習用データの学習結果をプロット
+        plt.plot(x_iter, train_losses[0], marker='.', linestyle='--',
+                 label='2005(train)')  # 2005年分のlossをプロット
+        plt.plot(x_iter, train_losses[1], marker='.', linestyle='--',
+                 label='2006(train)')  # 2006年分のlossをプロット
+        plt.plot(x_iter, train_losses[2], marker='.', linestyle='--',
+                 label='2007(train)')  # 2007年分のlossをプロット
+
+        plt.grid(which='major', color='black', linestyle='--')
+        plt.legend(loc="lower right", fontsize=15)
+        plt.xticks(np.arange(0, 1301, 100))
+        #plt.ylim(bottom=0.40, top=1.01)
+        if mode == 'NOTEWC':
+            plt.title("MVG + SGD [train and test loss]")
+        else:
+            plt.title("MVG + EWC [train and test loss]")
+        plt.xlabel("Iterations")
+        plt.ylabel("Train and Test loss")
         plt.show()
 
     print("=" * 10 + "test accs" + "=" * 10)
