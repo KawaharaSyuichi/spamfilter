@@ -661,7 +661,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
             # 2005年のテスト用データに対するlossを算出
             test_losses[0].append(
-                model.accuracy.eval(feed_dict=feed_dict_test_2005))
+                model.cross_entropy.eval(feed_dict=feed_dict_test_2005))
 
             # 2005年の学習用データに対する識別率を算出
             train_batch_2005 = make_train_batch(doc2vec_2005)
@@ -674,7 +674,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
             # 2005年の学習用データに対するlossを算出
             train_losses[0].append(
-                model.accuracy.eval(feed_dict=feed_dict_train_2005))
+                model.cross_entropy.eval(feed_dict=feed_dict_train_2005))
 
             # 2006年のテスト用データに対する識別率を算出
             test_batch_2006 = make_test_batch(doc2vec_2006)
@@ -687,7 +687,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
             # 2006年のテスト用データに対するlossを算出
             test_losses[1].append(
-                model.accuracy.eval(feed_dict=feed_dict_test_2006))
+                model.cross_entropy.eval(feed_dict=feed_dict_test_2006))
 
             # 2006年の学習用データに対する識別率を算出
             train_batch_2006 = make_train_batch(doc2vec_2006)
@@ -700,7 +700,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
             # 2006年の学習用データに対するlossを算出
             train_losses[1].append(
-                model.accuracy.eval(feed_dict=feed_dict_train_2006))
+                model.cross_entropy.eval(feed_dict=feed_dict_train_2006))
 
             if iteration < 800:  # iterationが800未満の場合、2007年の分はNoneで埋める
                 train_accs[2].append(None)
@@ -719,7 +719,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
                 # 2007年のテスト用データに対するlossを算出
                 test_losses[2].append(
-                    model.accuracy.eval(feed_dict=feed_dict_test_2007))
+                    model.cross_entropy.eval(feed_dict=feed_dict_test_2007))
 
                 if iteration == 800 or iteration == 820:
                     print("2007 MVG+{} acc : {:.1f}% , iteration : {}".format(
@@ -736,7 +736,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
                 # 2007年の学習用データに対するlossを算出
                 train_losses[2].append(
-                    model.accuracy.eval(feed_dict=feed_dict_train_2007))
+                    model.cross_entropy.eval(feed_dict=feed_dict_train_2007))
 
         # 一回学習するごとに重みに0.99を乗算する
         model.multiply_weight(sess)
@@ -937,7 +937,6 @@ def main():
 
     PARAMETERS.set_lams(50)
 
-    """
     MVG(
         model,
         'EWC',
@@ -948,7 +947,7 @@ def main():
         PARAMETERS.DISP_FREQ,
         sess,
         PARAMETERS.lams,
-        same_flag=True
+        same_flag=False
     )
     """
 
@@ -964,6 +963,7 @@ def main():
         PARAMETERS.lams,
         same_flag=False
     )
+    """
 
 
 if __name__ == "__main__":
