@@ -28,7 +28,7 @@ class parameter:
     """
 
     def __init__(self):
-        self.ITERATIONS = 1320  # 元は520
+        self.ITERATIONS = 1320  # 元は1320
         self.DISP_FREQ = 20  # 元は20
         self.lams = [0]
 
@@ -340,7 +340,6 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
     train_doc2vec = copy.copy(doc2vec_dict['2006'])
 
     for iteration in range(num_iter):
-        print('iteration', iteration)
         if iteration == 800:  # 2007年の学習に切り替え
             train_doc2vec = copy.copy(
                 doc2vec_dict['2007'])
@@ -418,9 +417,12 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                 test_losses[1].append(
                     model.cross_entropy.eval(feed_dict=feed_dict_test_2007))
 
-                if iteration == 800 or iteration == 820:
+                """
+                # if iteration == 800 or iteration == 820:
+                if iteration >= 800:
                     print("2007 CMP+{} acc : {:.1f}% , iteration : {}".format(
                         mode, test_accs[1][-1] * 100, iteration))
+                """
 
                 # 2007年の学習用データに対する識別率を算出
                 train_batch_2007 = make_train_batch(doc2vec_2007)
@@ -435,10 +437,15 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                 train_losses[1].append(
                     model.cross_entropy.eval(feed_dict=feed_dict_train_2007))
 
+                if iteration >= 800:
+                    print("2007 CMP+{} train acc : {:.1f}% , iteration : {}".format(
+                        mode, train_accs[1][-1] * 100, iteration))
+
         # 一回学習するごとに重みに0.99を乗算する
         # model.multiply_weight(sess)
 
     if same_flag == False:  # 学習用とテスト用の識別率を別々にプロット
+        x_max = 1301
         x_iter = list(range(1, num_iter, disp_freq))
         ########################################################
         #                      識別率のプロット(個別)             #
@@ -451,7 +458,7 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
         plt.grid(which='major', color='black', linestyle='--')
         plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1301, 100))
+        plt.xticks(np.arange(0, 1101, 100))
         plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("CMP + SGD [test accuracy]")
@@ -469,7 +476,7 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
         plt.grid(which='major', color='black', linestyle='--')
         plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1301, 100))
+        plt.xticks(np.arange(0, 1101, 100))
         plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("CMP + SGD [train accuracy]")
@@ -489,8 +496,8 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                  label='2007')  # 2007年分のlossをプロット
 
         plt.grid(which='major', color='black', linestyle='--')
-        plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1301, 100))
+        plt.legend(loc="best", fontsize=15)
+        plt.xticks(np.arange(0, 1101, 100))
         #plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("CMP + SGD [test loss]")
@@ -507,8 +514,8 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                  label='2007')  # 2007年分のlossをプロット
 
         plt.grid(which='major', color='black', linestyle='--')
-        plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1301, 100))
+        plt.legend(loc="best", fontsize=15)
+        plt.xticks(np.arange(0, 1101, 100))
         #plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("CMP + SGD [train loss]")
@@ -521,6 +528,7 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
         ########################################################
         #                      識別率のプロット(同時)             #
         ########################################################
+        x_max = 1301
         x_iter = list(range(1, num_iter, disp_freq))
         # テスト用データの学習結果をプロット
         plt.plot(x_iter, test_accs[0], marker='.', linestyle='-',
@@ -536,7 +544,7 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
         plt.grid(which='major', color='black', linestyle='--')
         plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1301, 100))
+        plt.xticks(np.arange(0, 1101, 100))
         plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("CMP + SGD [train and test accuracy]")
@@ -563,8 +571,8 @@ def CMP(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                  label='2007(train)')  # 2007年分のlossをプロット
 
         plt.grid(which='major', color='black', linestyle='--')
-        plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1301, 100))
+        plt.legend(loc="best", fontsize=15)
+        plt.xticks(np.arange(0, 1101, 100))
         #plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("CMP + SGD [train and test loss]")
@@ -720,10 +728,12 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                 # 2007年のテスト用データに対するlossを算出
                 test_losses[2].append(
                     model.cross_entropy.eval(feed_dict=feed_dict_test_2007))
-
-                if iteration == 800 or iteration == 820:
+                """
+                # if iteration == 800 or iteration == 820 or iteration == 840 or iteration == 860:
+                if iteration >= 800:
                     print("2007 MVG+{} acc : {:.1f}% , iteration : {}".format(
                         mode, test_accs[2][-1] * 100, iteration))
+                """
 
                 # 2007年の学習用データに対する識別率を算出
                 train_batch_2007 = make_train_batch(doc2vec_2007)
@@ -738,10 +748,15 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                 train_losses[2].append(
                     model.cross_entropy.eval(feed_dict=feed_dict_train_2007))
 
+                if iteration >= 800:
+                    print("2007 MVG+{} train acc : {:.1f}% , iteration : {}".format(
+                        mode, train_accs[2][-1] * 100, iteration))
+
         # 一回学習するごとに重みに0.99を乗算する
         model.multiply_weight(sess)
 
     if same_flag == False:  # 学習用とテスト用の識別率を別々にプロット
+        x_max = 1301
         x_iter = list(range(1, num_iter, disp_freq))
         # テスト用データの学習結果をプロット
         ########################################################
@@ -756,7 +771,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
         plt.grid(which='major', color='black', linestyle='--')
         plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1301, 100))
+        plt.xticks(np.arange(0, x_max, 100))
         plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("MVG + SGD [test accuracy]")
@@ -776,7 +791,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
         plt.grid(which='major', color='black', linestyle='--')
         plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1301, 100))
+        plt.xticks(np.arange(0, x_max, 100))
         plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("MVG + SGD [train accuracy]")
@@ -797,8 +812,8 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                  label='2007')  # 2007年分のlossをプロット
 
         plt.grid(which='major', color='black', linestyle='--')
-        plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1301, 100))
+        plt.legend(loc="best", fontsize=15)
+        plt.xticks(np.arange(0, x_max, 100))
         #plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("MVG + SGD [test loss]")
@@ -817,8 +832,8 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                  label='2007')  # 2007年分のlossをプロット
 
         plt.grid(which='major', color='black', linestyle='--')
-        plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1301, 100))
+        plt.legend(loc="best", fontsize=15)
+        plt.xticks(np.arange(0, x_max, 100))
         #plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("MVG + SGD [train loss]")
@@ -828,6 +843,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
         plt.ylabel("Train loss")
         plt.show()
     else:  # 学習用とテスト用の識別率を同時にプロット
+        x_max = 1301
         x_iter = list(range(1, num_iter, disp_freq))
         # テスト用データの学習結果をプロット
         ########################################################
@@ -850,7 +866,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
 
         plt.grid(which='major', color='black', linestyle='--')
         plt.legend(loc="lower right", fontsize=15)
-        plt.xticks(np.arange(0, 1301, 100))
+        plt.xticks(np.arange(0, x_max, 100))
         plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
             plt.title("MVG + SGD [train and test accuracy]")
@@ -879,7 +895,7 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
                  label='2007(train)')  # 2007年分のlossをプロット
 
         plt.grid(which='major', color='black', linestyle='--')
-        plt.legend(loc="lower right", fontsize=15)
+        plt.legend(loc="best", fontsize=15)
         plt.xticks(np.arange(0, 1301, 100))
         #plt.ylim(bottom=0.40, top=1.01)
         if mode == 'NOTEWC':
@@ -894,10 +910,26 @@ def MVG(model, mode, mail_doc2vec, mail_class, doc2vec_dict, num_iter, disp_freq
     print("2005 test accs", test_accs[0][-1])
     print("2006 test accs", test_accs[1][-1])
     print("2007 test accs", test_accs[2][-1])
-    print("=" * 10 + "test accs" + "=" * 10)
+    print("=" * 10 + "train accs" + "=" * 10)
     print("2005 train accs", train_accs[0][-1])
     print("2006 train accs", train_accs[1][-1])
     print("2007 train accs", train_accs[2][-1])
+    print("=" * 10 + "test loss" + "=" * 10)
+    print("2005 test loss", test_losses[0][40])
+    print("2006 test loss", test_losses[1][40])
+    print("2007 test loss", test_losses[2][40])
+
+    print("2005 test loss", test_losses[0][-1])
+    print("2006 test loss", test_losses[1][-1])
+    print("2007 test loss", test_losses[2][-1])
+    print("=" * 10 + "train loss" + "=" * 10)
+    print("2005 train loss", train_losses[0][40])
+    print("2006 train loss", train_losses[1][40])
+    print("2007 train loss", train_losses[2][40])
+
+    print("2005 train loss", train_losses[0][-1])
+    print("2006 train loss", train_losses[1][-1])
+    print("2007 train loss", train_losses[2][-1])
 
 
 def main():
@@ -937,6 +969,7 @@ def main():
 
     PARAMETERS.set_lams(50)
 
+    """
     MVG(
         model,
         'EWC',
@@ -947,13 +980,13 @@ def main():
         PARAMETERS.DISP_FREQ,
         sess,
         PARAMETERS.lams,
-        same_flag=False
+        same_flag=True
     )
     """
 
     CMP(
         model,
-        'NOTEWC',
+        'EWC',
         mail_doc2vec,
         mail_class,
         model_doc2vec_dict,
@@ -961,9 +994,8 @@ def main():
         PARAMETERS.DISP_FREQ,
         sess,
         PARAMETERS.lams,
-        same_flag=False
+        same_flag=True
     )
-    """
 
 
 if __name__ == "__main__":
