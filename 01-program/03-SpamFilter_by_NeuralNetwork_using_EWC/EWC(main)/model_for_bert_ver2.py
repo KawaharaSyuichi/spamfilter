@@ -40,18 +40,23 @@ class Model:
         self.x = x  # input placeholder (x:[None,768])
 
         # 入力層と中間層の間のパラメータ
-        W1 = weight_variable([in_dim, 128])
-        b1 = bias_variable([128])
+        W1 = weight_variable([in_dim, 512])  # 128
+        b1 = bias_variable([512])
+
+        # 中間層間のパラメータ
+        W2 = weight_variable([512, 512])
+        b2 = bias_variable([512])
 
         # 中間層と出力層の間のパラメータ
-        W2 = weight_variable([128, out_dim])
-        b2 = bias_variable([out_dim])
+        W3 = weight_variable([512, out_dim])
+        b3 = bias_variable([out_dim])
 
         # ReLU関数：活性化関数の一つで、入力した値が0以下のときに0、0より大きい場合はそのままの値を出力する関数
-        h1 = tf.nn.relu(tf.matmul(x, W1) + b1)  # hidden layer
-        self.y = tf.matmul(h1, W2) + b2  # output layer
+        h1 = tf.nn.relu(tf.matmul(x, W1) + b1)  # hidden 1 layer
+        h2 = tf.nn.relu(tf.matmul(h1, W2) + b2)  # hidden 2 layer
+        self.y = tf.matmul(h2, W3) + b3  # output layer
 
-        self.var_list = [W1, b1, W2, b2]
+        self.var_list = [W1, b1, W2, b2, W3, b3]
 
         # 交差エントロピー損失関数
         self.cross_entropy = tf.reduce_mean(
