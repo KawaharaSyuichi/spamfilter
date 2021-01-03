@@ -159,7 +159,7 @@ def plot_test_acc(plot_handles):
     plt.ylabel("Test Accuracy")
     plt.yticks(np.arange(0.45, 1.001, 0.01))
     plt.xticks(np.arange(0, 1320, 100))  # 元は0,520,20
-    plt.ylim(0.90, 1.001)
+    plt.ylim(0.89, 1.001)
     plt.grid(which='major', color='black', linestyle='-')
     display.display(plt.gcf())
     display.clear_output(wait=True)
@@ -329,13 +329,13 @@ def main():
 
         # 各ラベルのフィッシャー情報量の計算
         model.compute_fisher(model_bert_dict[doc2vec_label], sess,
-                             num_samples=200, plot_diffs=True)
+                             num_samples=200, plot_diffs=False)
 
         # 重みとバイアスのパラメータ保存
         model.stor()
 
         if len(PARAMETERS.lams) == 1:
-            PARAMETERS.set_lams(50)
+            PARAMETERS.set_lams(2000)  # 50
 
 
 if __name__ == "__main__":
